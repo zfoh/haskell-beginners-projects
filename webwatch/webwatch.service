@@ -1,0 +1,10 @@
+[Unit]
+Description=ZuriHac Demo: webwatch
+
+[Service]
+Type=simple
+ExecStart=/home/ec2-user/webwatch /home/ec2-user/webwatch.conf
+User=ec2-user
+
+[Install]
+WantedBy=multi-user.target
