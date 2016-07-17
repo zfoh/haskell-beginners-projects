@@ -25,6 +25,7 @@ For this project, we will need:
 * [SQLite](https://www.sqlite.org/) database
 
 Steps:
+
 1. Install Haskell compiler & tools: https://www.haskell.org/downloads#platform
    * If you are using Ubuntu Linux, choose "Generic". A distribution specific
      package might be outdated (e.g., on Ubuntu, Stack is not included).
@@ -238,8 +239,8 @@ will now say: ```Hello haskell```!
 
 ### File upload
 
-We have a working web application. To create a meme, we need to be able upload
-a picture. Follow the steps to add a file upload handler.
+We have a working web application. To create a meme, we need to be able to
+upload a picture. Follow the steps to add a file upload handler.
 
 1. Extend the routes with a file upload handler mapped to ```/upload```:
 
@@ -350,6 +351,7 @@ database. To make it simple, we will use SQLite database. We need:
 * database initialization code.
 
 Follow the steps:
+
 1. Create file *App.hs* which will hold application state:
 
    ```haskell
@@ -576,6 +578,7 @@ Follow the steps:
 
 We are able to store metadata in database. But we still can't consume it.
 Create a new handler which will list all stored memes:
+
 1. We want to output the memes in JSON format. Enable JSON serialization for
    ```Meme``` record in *Db.hs*:
 
@@ -644,7 +647,7 @@ show you the uploaded image.
 
 ### Image processor
 
-The next step in our Memegenerator is to embedd top and bottom
+The next step in our Meme generator is to embed top and bottom
 text into an image. We will write a string into an image using well known
 [GD library](https://libgd.github.io/pages/about.html).
 
@@ -702,7 +705,7 @@ text into an image. We will write a string into an image using well known
                         ...
    ```
 
-3. Hook up ```createMeme``` in upload request handler:
+3. Hook up ```createMeme``` in the upload request handler:
 
    ```haskell
    import Img (createMeme)
@@ -758,6 +761,26 @@ That's it! Try it out.
 
 If you are stuck, consult this repository:
 https://github.com/jaspervdj/haskell-beginners-projects/tree/master/memegen
+
+If you missed a library dependency, here is the list of all of them:
+
+```
+aeson
+bytestring
+containers
+directory
+enumerator
+filepath
+gd
+lens
+mtl
+snap
+snap-core
+snaplet-sqlite-simple
+snap-server
+sqlite-simple
+text
+```
 
 
 ## Followup ideas
