@@ -1,17 +1,15 @@
 #### ZuriHac 2016 Beginner Track Exercise
 # Web meme generator
 
-**Description:** A web application for creating [memes](https://en.wikipedia.org/wiki/Internet_meme) from pictures.
+**Description:** A web application for creating [memes](https://en.wikipedia.org/wiki/Internet_meme) from pictures:
+![Printing a newline in Haskell](https://s-media-cache-ak0.pinimg.com/736x/d4/0e/34/d40e34931f55f7fb2d6e1ef7eff11b73.jpg)
 
 **Learning goals:**
-* How to use a Haskell web framework (Snap) to build a REST API.
+* How to use a Haskell web framework (Snap).
 * How to do image processing in Haskell (using GD library).
 * How to store data into a database (SQLite).
 * No HTML or CSS knowledge (or work) required.
 * How to build a small, real life web application in Haskell.
-
-**End goal:** Web application capable of creating memes like:
-![Printing a newline in Haskell](https://s-media-cache-ak0.pinimg.com/736x/d4/0e/34/d40e34931f55f7fb2d6e1ef7eff11b73.jpg)
 
 **NOTE:** Instructions are tested on Ubuntu Linux 16.04 & Microsoft Windows 10.
 
@@ -86,7 +84,13 @@ stack build
 stack exec memegen-exe
 ```
 
-It will print: ```someFunc```. That comes from: ```src/Lib.hs```. Check it out.
+It will print:
+
+```
+someFunc
+```
+
+The logic behind is contained in: *src/Lib.hs*. Check it out.
 
 A few more useful Stack commands:
 * Load your module inside of Haskell REPL: ```stack ghci```
@@ -101,7 +105,7 @@ Haskell package installer, start here: https://www.haskell.org/cabal/users-guide
 
 To build Memegen backend we will use [Snap framework](http://snapframework.com/).
 Start by defining the *application entry point* and *importing Snap framework*.
-Open ```src/Lib.hs``` and change the module definition to:
+Open *src/Lib.hs* and change the module definition to:
 
 ```haskell
 module Lib
@@ -109,7 +113,7 @@ module Lib
     ) where
 ```
 
-Import Snap framework, and write the entry point:
+Import Snap framework, write the entry point:
 
 ```haskell
 import qualified Snap as S
@@ -135,13 +139,13 @@ library
 
 To make the code compile successfully, we still need to make two changes:
 * Add *OverloadedStrings* syntax extension. It is required by ```makeSnaplet```
-  as it actually takes *Text* and not *String*. By enabling *OverloadedStrings*
+  as it actually takes ```Text``` and not ```String```. By enabling *OverloadedStrings*
   syntax extension we make this conversion automatic (we make string literals
   polymorphic over the ```IsString``` class). Add ```{-# LANGUAGE OverloadedStrings #-}```
-  on top of ```Lib.hs```.
-* Change ```app/Main.hs``` to call ```memegenEntry``` instead of ```someFunc```.
+  on top of *Lib.hs*.
+* Change *app/Main.hs* to call ```memegenEntry``` instead of ```someFunc```.
 
-If you got everything correctly, your ```Lib.hs`` will look like this:
+If you got everything correctly, your *Lib.hs* will look like this:
 
 ```haskell
 {-# LANGUAGE OverloadedStrings #-}
@@ -176,15 +180,14 @@ Initializing memegen @ /
 Listening on http://0.0.0.0:8000/
 ```
 
-The web server works! Try it out by going to http://localhost:8000
+The web server works! Try it out by going to [localhost:8000](http://localhost:8000)
 in your browser. The web page will say:
 
 ```
 No handler accepted "/"
 ```
 
-We haven't configured any routes. Let's fix that! Open ```Lib.hs```
-and add:
+We haven't configured any routes. Let's fix that! Open *Lib.hs* and add:
 
 ```
 routes :: [(B.ByteString, S.Handler a b ())]
@@ -204,7 +207,7 @@ We still have to:
 
 * Add *bytestring* in Cabal library dependency.
 
-If you build & run application, http://localhost:8000 will say ```hello there```.
+If you build & run application, [localhost:8000](http://localhost:8000) will say ```hello there```.
 
 Before we jump to more advanced topics, let's learn how to pass
 arguments to request handlers. Expand the routes with ```echoHandler```:
@@ -223,7 +226,7 @@ echoHandler = S.method S.GET doHandle
             (S.writeBS . (B.append "Hello ")) param
 ```
 
-http://localhost:8000/hello/haskell will now say: ```Hello haskell```!
+[/hello/haskell](http://localhost:8000/hello/haskell) will now say: ```Hello haskell```!
 
 
 ### File upload
@@ -280,7 +283,7 @@ a picture. Follow the steps to add a file upload handler.
                S.setMaximumFormInputSize (2^(24::Int)) S.defaultUploadPolicy
    ```
 
-   And its Cabal dependencies:
+   Add its Cabal dependencies:
 
    ```
    snap-core
@@ -302,7 +305,7 @@ a picture. Follow the steps to add a file upload handler.
        liftIO $ createDirectoryIfMissing True "upload"
    ```
 
-   Don't forget to add ```directory``` library dependency in Cabal config.
+   Don't forget to add *directory* library dependency in Cabal config.
 
 4. Next thing we need is an HTML file upload form. Create an empty HTML
    file and paste the following HTML:
@@ -311,8 +314,8 @@ a picture. Follow the steps to add a file upload handler.
    <html>
    <body>
      <form action="http://localhost:8000/upload" method="post" enctype="multipart/form-data">
-       Top text: <input type="text" name="top" /><br/>
-       Select a file: <input type="file" name="image" /><br/>
+       Top text: <input type="text" name="top" /><br />
+       Select a file: <input type="file" name="image" /><br />
        Bottom text: <input type="text" name="bottom" />
        <hr />
        <input type="submit" value="Upload" />
@@ -326,7 +329,7 @@ a picture. Follow the steps to add a file upload handler.
 
 5. Build & run the application. Open the HTML file in a web browser, and
    upload an image. The image should be presented to you on the following
-   screen, and stored in *upload* directory.
+   screen. Also it will be stored in *upload* directory.
 
 
 ### A metadata store
@@ -493,7 +496,7 @@ Follow the steps:
    ```AppState``` from *App.hs*. That is why we have explicitly wrote it in
    ```saveMeme``` and ```listMemes``` type signatures.
    
-6. Initialize a database in *Lib.hs*:
+6. Initialize the database in *Lib.hs*:
 
    ```haskell
    import qualified Db
@@ -540,7 +543,7 @@ Follow the steps:
    uploadHandler :: S.Handler AppState AppState ()
    ```
    
-7. Store the meme metadata when at the upload time. Hook meme saving
+7. Store the meme metadata at the upload time. Hook the meme saving
    logic inside of ```uploadHandler```:
 
    ```haskell
@@ -560,8 +563,11 @@ Follow the steps:
    ```
    
    You need to add *containers* library in the application Cabal dependencies.
-   
-We are able to store metadata into database. But we still can't consume it.
+
+
+#### List of memes
+
+We are able to store metadata in database. But we still can't consume it.
 Create a new handler which will list all stored memes:
 1. We want to output the memes in JSON format. Enable JSON serialization for
    ```Meme``` record in *Db.hs*:
@@ -602,16 +608,153 @@ Create a new handler which will list all stored memes:
        S.writeBS $ BL.toStrict $ encode memes
    ```
 
-Upload a file using the existing HTML form. Then go to http://localhost:8000/list
+Upload a file using the existing HTML form. Then go to [/list](http://localhost:8000/list)
 and you should see the stored memes.
 
 
+#### Meme viewer
 
-## Emergency exit
-If you are stuck, consult this repository: https://github.com/jaspervdj/haskell-beginners-projects/tree/master/memegen
+Listing memes gives you only metadata. We usually care about the picture.
+Create a static content handler to enable image viewing.
+
+Add a new route in *Lib.hs*:
+
+```haskell
+import qualified Snap.Util.FileServe as S
+
+routes = [ ("/", S.writeText "hello there")
+         , ("hello/:echoparam", S.method S.GET $ echoHandler)
+         , ("upload", S.method S.POST $ uploadHandler)
+         , ("list", S.method S.GET $ listHandler)
+         , ("image", S.serveDirectory "upload")
+         ]
+```
+
+Done! Upload an image named *example.jpg* then go to
+[/image/example.jpg](http://localhost:8000/image/example.jpg) and it will
+show you the uploaded image.
+
+
+### Image processor
+
+The next step in our Memegenerator is to embedd top and bottom
+text into an image. We will write a string into an image using well known
+[GD library](https://libgd.github.io/pages/about.html).
+
+1. Create *Img.hs* file with the following content:
+
+   ```haskell
+   module Img
+       ( createMeme
+       ) where
+   
+   import qualified Graphics.GD as GD
+   import qualified Data.ByteString as B
+   
+   textColor :: GD.Color
+   textColor = GD.rgb 255 255 255
+   
+   textSize :: Double
+   textSize = 32.0
+   
+   createMeme :: B.ByteString -> String -> String -> IO B.ByteString
+   createMeme imgBs upperText lowerText = do
+     img <- GD.loadJpegByteString imgBs
+     (imgW, imgH) <- GD.imageSize img
+   
+     _ <- GD.useFontConfig True
+   
+     -- Draw upper text
+     (_, (lrx, lry), _, (ulx, uly))
+         <- GD.measureString "sans" textSize 0.0 (0, 0) upperText textColor
+     let (textW, textH) = (1 + lrx - ulx, 1 + lry - uly)
+     let upperPos = (imgW `div` 2 - textW `div` 2, textH + 10)
+     _ <- GD.drawString "sans" textSize 0.0 upperPos upperText textColor img
+   
+     -- Draw lower text
+     (_, (lrx, lry), _, (ulx, uly))
+         <- GD.measureString "sans" textSize 0.0 (0, 0) lowerText textColor
+     let (textW, textH) = (1 + lrx - ulx, 1 + lry - uly)
+     let lowerPos = (imgW `div` 2 - textW `div` 2, imgH - 20)
+     _ <- GD.drawString "sans" textSize 0.0 lowerPos lowerText textColor img
+   
+     GD.saveJpegByteString 100 img
+   ```
+   
+   Note that this setup works only with *JPEG* images. The GD library supports
+   more formats.
+   
+2. Expose ```Img``` module and add *gd* library dependency:
+
+   ```
+   library
+     hs-source-dirs:      src
+     exposed-modules:     Lib, App, Db, Img
+     build-depends:       base >= 4.7 && < 5
+                        , gd
+                        ...
+   ```
+  
+3. Hook up ```createMeme``` in upload request handler:
+
+   ```haskell
+   import Img (createMeme)
+   
+   uploadHandler = S.method S.POST doUpload
+     where
+       doUpload = do
+           ...
+           memeContent <- liftIO $
+             createMeme imgContent (T.unpack topText) (T.unpack bottomText)
+   
+           S.writeBS memeContent
+   ```
+   
+   The final, complete, upload handler:
+   
+   ```haskell
+   uploadHandler :: S.Handler AppState AppState ()
+   uploadHandler = S.method S.POST doUpload
+     where
+       doUpload = do
+           files <- S.handleMultipart uploadPolicy $ \part -> do
+             content <- liftM B.concat EL.consume
+             return (part, content)
+           let (imgPart, imgContent) = head files
+           let fileName = fromJust (S.partFileName imgPart)
+   
+           req <- S.getRequest
+           let params = S.rqPostParams req
+           let topText = decodeUtf8 $ head (params ! "top")
+           let bottomText = decodeUtf8 $ head (params ! "bottom")
+           S.withTop db $ Db.saveMeme topText bottomText (decodeUtf8 fileName)
+   
+           memeContent <- liftIO $
+             createMeme imgContent (T.unpack topText) (T.unpack bottomText)
+   
+           liftIO $ B.writeFile
+             ("upload" </> (T.unpack $ decodeUtf8 fileName)) memeContent
+   
+           S.writeBS memeContent
+   
+           where
+             uploadPolicy :: S.UploadPolicy
+             uploadPolicy =
+               S.setMaximumFormInputSize (2^(24::Int)) S.defaultUploadPolicy
+
+   ```
+
+That's it! Try it out.
+
+
+## Disaster recovery plan
+
+If you are stuck, consult this repository:
+https://github.com/jaspervdj/haskell-beginners-projects/tree/master/memegen
 
 
 ## Followup ideas
+
 * Write a test suite.
 * Support more then one image format.
 * This code has a lot of shortcuts to ease the understanding. Make the code production-ready!
