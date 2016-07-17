@@ -1,0 +1,618 @@
+#### ZuriHac 2016 Beginner Track Exercise
+# Web meme generator
+
+**Description:** A web application for creating [memes](https://en.wikipedia.org/wiki/Internet_meme) from pictures.
+
+**Learning goals:**
+* How to use a Haskell web framework (Snap) to build a REST API.
+* How to do image processing in Haskell (using GD library).
+* How to store data into a database (SQLite).
+* No HTML or CSS knowledge (or work) required.
+* How to build a small, real life web application in Haskell.
+
+**End goal:** Web application capable of creating memes like:
+![Printing a newline in Haskell](https://s-media-cache-ak0.pinimg.com/736x/d4/0e/34/d40e34931f55f7fb2d6e1ef7eff11b73.jpg)
+
+**NOTE:** Instructions are tested on Ubuntu Linux 16.04 & Microsoft Windows 10.
+
+Let's start!
+
+
+## Development environment
+
+For this project, we will need:
+* Haskell compiler and corresponding tools (Cabal, Stack, etc.),
+* [GD library](https://github.com/libgd/libgd)
+* [SQLite](https://www.sqlite.org/) database
+
+### Steps
+1. Install Haskell compiler & tools: https://www.haskell.org/downloads#platform
+   * If you are using Ubuntu Linux, choose "Generic". A distribution specific
+     package might be outdated (e.g., on Ubuntu, Stack is not included).
+   * If you only miss Stack, get it from here: http://docs.haskellstack.org/en/stable/README/
+2. Install GD library
+   * On Debian-based distributions, run:
+
+     ```sh
+     sudo apt-get install libgd-dev
+     ```
+
+   * On Windows, get a precompiled binary: http://gnuwin32.sourceforge.net/packages/gd.htm
+3. Install SQLite
+   * On Debian-based distributions, run:
+
+     ```sh
+     sudo apt-get install libsqlite3-dev
+     ```
+
+   * On Windows, get a precompiled binary: https://www.sqlite.org/download.html
+
+
+## A new project
+
+Create a new project using stack:
+
+```
+stack new memegen
+cd memegen
+```
+
+We got an application skeleton! See what it contains:
+
+```
+app/Main.hs    -- Application entry point
+src/Lib.hs     -- Application logic
+test/Spec.hs   -- Test suite skeleton
+LICENSE
+memegen.cabal  -- Build system config
+Setup.hs       -- Haskell package installer
+stack.yaml     -- Modern Haskell build tool config
+```
+
+Next step is to initialize the enviroment. We need to setup the sandbox that
+we will use for development:
+
+```
+stack setup
+```
+
+This might take a while. Stack is downloading all required libraries to make an
+isolated development sandbox (so that we avoid colisions with system installed
+library versions). After it is completed, try to build and run the code to get
+a bit more familiar with Stack:
+
+```
+stack build
+stack exec memegen-exe
+```
+
+It will print: ```someFunc```. That comes from: ```src/Lib.hs```. Check it out.
+
+A few more useful Stack commands:
+* Load your module inside of Haskell REPL: ```stack ghci```
+* Run tests: ```stack test```
+
+Pretty awesome! For self-study, see the following guide:
+http://docs.haskellstack.org/en/stable/GUIDE/. To learn more about Cabal and
+Haskell package installer, start here: https://www.haskell.org/cabal/users-guide/.
+
+
+## A web application
+
+To build Memegen backend we will use [Snap framework](http://snapframework.com/).
+Start by defining the *application entry point* and *importing Snap framework*.
+Open ```src/Lib.hs``` and change the module definition to:
+
+```haskell
+module Lib
+    ( memegenEntry
+    ) where
+```
+
+Import Snap framework, and write the entry point:
+
+```haskell
+import qualified Snap as S
+
+memegenEntry :: IO ()
+memegenEntry = S.serveSnaplet S.defaultConfig appInit
+
+appInit :: S.SnapletInit a ()
+appInit = S.makeSnaplet "memegen" "Meme generator." Nothing $ do
+    S.addRoutes []
+```
+
+Try to build the application by running ```stack build```. It will fail.
+The ```snap``` dependency is missing. Open Cabal configuration and add the
+library dependency:
+
+```
+library
+  ...
+  build-depends:       base >= 4.7 && < 5
+                     , snap
+```
+
+To make the code compile successfully, we still need to make two changes:
+* Add *OverloadedStrings* syntax extension. It is required by ```makeSnaplet```
+  as it actually takes *Text* and not *String*. By enabling *OverloadedStrings*
+  syntax extension we make this conversion automatic (we make string literals
+  polymorphic over the ```IsString``` class). Add ```{-# LANGUAGE OverloadedStrings #-}```
+  on top of ```Lib.hs```.
+* Change ```app/Main.hs``` to call ```memegenEntry``` instead of ```someFunc```.
+
+If you got everything correctly, your ```Lib.hs`` will look like this:
+
+```haskell
+{-# LANGUAGE OverloadedStrings #-}
+
+module Lib
+    ( memegenEntry
+    ) where
+
+import qualified Snap as S
+
+memegenEntry :: IO ()
+memegenEntry = S.serveSnaplet S.defaultConfig appInit
+
+appInit :: S.SnapletInit a ()
+appInit = S.makeSnaplet "memegen" "Meme generator." Nothing $ do
+    S.addRoutes []
+```
+
+Build and run the app:
+
+```
+stack build
+stack exec memegen-exe
+```
+
+You should get a message saying:
+
+```
+no port specified, defaulting to port 8000
+Initializing memegen @ /
+
+Listening on http://0.0.0.0:8000/
+```
+
+The web server works! Try it out by going to http://localhost:8000
+in your browser. The web page will say:
+
+```
+No handler accepted "/"
+```
+
+We haven't configured any routes. Let's fix that! Open ```Lib.hs```
+and add:
+
+```
+routes :: [(B.ByteString, S.Handler a b ())]
+routes = [ ("/", S.writeText "hello there")
+         ]
+```
+
+We still have to:
+* Pass the routes to ```S.addRoutes```,
+
+  ```haskell
+  import qualified Data.ByteString as B
+  
+  appInit = S.makeSnaplet "memegen" "Meme generator." Nothing $ do
+     S.addRoutes routes
+  ```
+
+* Add *bytestring* in Cabal library dependency.
+
+If you build & run application, http://localhost:8000 will say ```hello there```.
+
+Before we jump to more advanced topics, let's learn how to pass
+arguments to request handlers. Expand the routes with ```echoHandler```:
+
+```haskell
+routes = [ ("/", S.writeText "hello there")
+         , ("hello/:echoparam", S.method S.GET $ echoHandler)
+         ]
+
+echoHandler :: S.Handler a b ()
+echoHandler = S.method S.GET doHandle
+  where
+    doHandle = do
+      param <- S.getParam "echoparam"
+      maybe (S.writeBS "must specify echo/param in URL")
+            (S.writeBS . (B.append "Hello ")) param
+```
+
+http://localhost:8000/hello/haskell will now say: ```Hello haskell```!
+
+
+### File upload
+
+We have a working web application. To create a meme, we need to be able upload
+a picture. Follow the steps to add a file upload handler.
+
+1. Extend the routes with a file upload handler mapped to ```/upload```:
+
+   ```haskell
+   routes :: [(B.ByteString, S.Handler a b ())]
+   routes = [ ("/", S.writeText "hello there")
+            , ("hello/:echoparam", S.method S.GET $ echoHandler)
+            , ("upload", S.method S.POST $ uploadHandler)
+            ]
+   ```
+
+2. Write a file upload handler function:
+
+   ```haskell
+   import qualified Snap.Util.FileUploads as S
+   import qualified Data.Enumerator.List as EL
+   import qualified Data.Text as T
+   import           Data.Text.Encoding (decodeUtf8)
+   import           Control.Monad.State (liftM, liftIO)
+   import           System.FilePath ((</>))
+   import           Data.Maybe (fromJust)
+   
+   uploadHandler :: S.Handler a b ()
+   uploadHandler = S.method S.POST doUpload
+     where
+       doUpload = do
+           -- Files are sent as HTTP multipart form entries.
+           files <- S.handleMultipart uploadPolicy $ \part -> do
+             content <- liftM B.concat EL.consume
+             return (part, content)
+           let (imgPart, imgContent) = head files
+           let fileName = fromJust (S.partFileName imgPart)
+
+           -- Store the image in upload directory.
+           -- writeFile operates inside IO monad. Snap handlers run inside Snap
+           -- monad, which provides an access to IO monad. We use liftIO to
+           -- execute a function inside IO monad and return to Snap monad.
+           liftIO $ B.writeFile
+             ("upload" </> (T.unpack $ decodeUtf8 fileName)) imgContent
+
+           -- Show the uploaded image.
+           S.writeBS imgContent
+
+           where
+             uploadPolicy :: S.UploadPolicy
+             uploadPolicy =
+               -- 2^24 is the maximum allowed upload file size (16MiB)
+               S.setMaximumFormInputSize (2^(24::Int)) S.defaultUploadPolicy
+   ```
+
+   And its Cabal dependencies:
+
+   ```
+   snap-core
+   enumerator
+   text
+   mtl
+   filepath
+   ```
+
+3. If *upload* directory doesn't exist, writing the uploaded
+   file will fail. We can solve this by creating *upload* directory
+   at the application initialization time:
+
+   ```haskell
+   import System.Directory (createDirectoryIfMissing)
+   
+   appInit = S.makeSnaplet "memegen" "Meme generator." Nothing $ do
+       S.addRoutes routes
+       liftIO $ createDirectoryIfMissing True "upload"
+   ```
+
+   Don't forget to add ```directory``` library dependency in Cabal config.
+
+4. Next thing we need is an HTML file upload form. Create an empty HTML
+   file and paste the following HTML:
+
+   ```html
+   <html>
+   <body>
+     <form action="http://localhost:8000/upload" method="post" enctype="multipart/form-data">
+       Top text: <input type="text" name="top" /><br/>
+       Select a file: <input type="file" name="image" /><br/>
+       Bottom text: <input type="text" name="bottom" />
+       <hr />
+       <input type="submit" value="Upload" />
+     </form>
+   </body>
+   </html>
+   ```
+
+   This will be the HTML form which we will use through the rest
+   of the project.
+
+5. Build & run the application. Open the HTML file in a web browser, and
+   upload an image. The image should be presented to you on the following
+   screen, and stored in *upload* directory.
+
+
+### A metadata store
+
+To be able to list created memes, we need to store their metadata into a
+database. To make it simple, we will use SQLite database. We need:
+* an application state to keep the database connection,
+* a record to represent the data model,
+* database schema to persist the data model,
+* functions to write and read database data,
+* database initialization code.
+
+Follow the steps:
+1. Create file *App.hs* which will hold application state:
+
+   ```haskell
+   {-# LANGUAGE FlexibleInstances #-}
+   {-# LANGUAGE OverloadedStrings #-}
+   {-# LANGUAGE TemplateHaskell   #-}
+
+   module App where
+
+   import           Control.Lens (makeLenses)
+   import           Control.Monad.State (get)
+   import qualified Snap as S
+   import qualified Snap.Snaplet.SqliteSimple as L
+
+   data AppState = AppState
+       { _db :: S.Snaplet L.Sqlite
+       }
+
+   makeLenses ''AppState
+
+   instance L.HasSqlite (S.Handler b AppState) where
+       getSqliteState = S.with db get
+   ```
+
+   Export *App* module in Cabal config, and add *lens* and
+   *snaplet-sqlite-simple* dependencies:
+
+   ```
+   library
+    hs-source-dirs:      src
+    exposed-modules:     Lib, App
+    build-depends:       base >= 4.7 && < 5
+                       , lens
+                       , snaplet-sqlite-simple
+                       ...
+   ```
+
+   If you try to build the application, you will get the following error:
+
+   ```
+   While constructing the BuildPlan the following exceptions were encountered:
+
+   --  Failure when adding dependencies:
+         snaplet-sqlite-simple: needed (-any), stack configuration has no specified version (latest applicable is 0.4.8.3)
+       needed for package memegen-0.1.0.0
+
+   --  While attempting to add dependency,
+       Could not find package snaplet-sqlite-simple in known packages
+
+   Recommended action: try adding the following to your extra-deps in memegen/stack.yaml
+   - snaplet-sqlite-simple-0.4.8.3
+
+   You may also want to try the 'stack solver' command
+   ```
+
+   Stack couldn't find the module because it is not known by stackage.org.
+   We need to put it in *extra-deps* section of *stack.yaml*. Or you can run
+   Stack solver to do that for you:
+
+   ```
+   stack solver --update-config
+   ```
+
+   *Stack.yaml* is changed to:
+   ```yaml
+   flags: {}
+   extra-package-dbs: []
+   packages:
+   - '.'
+   extra-deps:
+   - aeson-0.9.0.1
+   - snaplet-sqlite-simple-0.4.8.3
+   resolver: lts-6.7
+   ```
+
+   Make sure that the project builds.
+
+2. Create file *Db.hs* which will hold data model, and data access layer.
+ 
+3. Put the data model in it:
+
+   ```haskell
+   module Db where
+
+   import qualified Data.Text as T
+   import qualified Snap.Snaplet.SqliteSimple as L
+
+   data Meme = Meme
+     {
+       memeId :: Int
+     , topText :: T.Text
+     , bottomText :: T.Text
+     , imageFilepath :: T.Text
+     } deriving (Show)
+
+   instance L.FromRow Meme where
+     fromRow = Meme <$> L.field <*> L.field <*> L.field <*> L.field
+   ```
+   
+4. Define the database schema, and create it if it doesn't exist:
+
+   ```haskell
+   {-# LANGUAGE OverloadedStrings #-}
+   {-# LANGUAGE ScopedTypeVariables #-}
+
+   import qualified Database.SQLite.Simple as D
+   import           Control.Monad.State (unless)
+
+   tableExists :: D.Connection -> String -> IO Bool
+   tableExists conn tblName = do
+     r <- D.query conn "SELECT name FROM sqlite_master \
+                       \WHERE type='table' AND name=?" (L.Only tblName)
+     case r of
+       [L.Only (_ :: String)] -> return True
+       _ -> return False
+   
+   -- | Create the necessary database tables, if not already initialized.
+   createTables :: D.Connection -> IO ()
+   createTables conn = do
+     schemaCreated <- tableExists conn "memes"
+     unless schemaCreated $
+       D.execute_ conn
+         (D.Query $ "CREATE TABLE memes (\
+                    \id INTEGER PRIMARY KEY, \
+                    \top_text TEXT, \
+                    \bottom_text TEXT, \
+                    \image_filepath TEXT)")
+   ```
+   
+   Make sure to add *sqlite-simple* as a Cabal dependency.
+   
+5. Write functions to read and write database data:
+
+   ```haskell
+   import App (AppState(..))
+   import Snap.Snaplet (Handler(..))
+
+   -- | Retrieve all memes.
+   listMemes :: Handler AppState L.Sqlite [Meme]
+   listMemes = L.query "SELECT id, top_text, bottom_text, image_filepath \
+                       \FROM memes ORDER BY id DESC" ()
+   
+   -- | Save a new meme
+   saveMeme :: T.Text -> T.Text -> T.Text -> Handler AppState L.Sqlite ()
+   saveMeme top bottom filepath =
+     L.execute "INSERT INTO memes (top_text, bottom_text, image_filepath) \
+               \VALUES (?, ?, ?)" (top, bottom, filepath)
+   ```
+   
+   Notice that we now know type of our application in-memory state. It is
+   ```AppState``` from *App.hs*. That is why we have explicitly wrote it in
+   ```saveMeme``` and ```listMemes``` type signatures.
+   
+6. Initialize a database in *Lib.hs*:
+
+   ```haskell
+   import qualified Db
+   import qualified Snap.Snaplet.SqliteSimple as S
+   import           App (AppState(..), db)
+   import           Control.Concurrent (withMVar)
+   import           Control.Lens ((^#))
+
+   appInit :: S.SnapletInit a ()
+   appInit = S.makeSnaplet "memegen" "Meme generator." Nothing $ do
+       S.addRoutes routes
+       d <- S.nestSnaplet "db" db S.sqliteInit
+
+       -- Grab the DB connection pool from the sqlite snaplet and call
+       -- into the Model to create all the DB tables if necessary.
+       let c = S.sqliteConn $ d ^# S.snapletValue
+       liftIO $ withMVar c $ \conn -> Db.createTables conn
+
+       -- Create upload directory
+       liftIO $ createDirectoryIfMissing True "upload"
+
+       return $ AppState d
+   ```
+   
+   But this doesn't compile. The application now has a state. The type
+   signature is wrong. Change it to:
+   
+   ```haskell
+   appInit :: S.SnapletInit AppState AppState
+   ```
+   
+   It works! Now that we know the application state type, let's update
+   the rest of type signatures in *Lib.hs*:
+   
+   ```haskell
+   -- Before
+   routes :: [(B.ByteString, S.Handler a b ())]
+   echoHandler :: S.Handler a b ()
+   uploadHandler :: S.Handler a b ()
+
+   -- After
+   routes :: [(B.ByteString, S.Handler AppState AppState ())]
+   echoHandler :: S.Handler AppState AppState ()
+   uploadHandler :: S.Handler AppState AppState ()
+   ```
+   
+7. Store the meme metadata when at the upload time. Hook meme saving
+   logic inside of ```uploadHandler```:
+
+   ```haskell
+   import Data.Map.Lazy ((!))
+   
+   uploadHandler = S.method S.POST doUpload
+     where
+       doUpload = do
+           ...
+           req <- S.getRequest
+           let params = S.rqPostParams req
+           let topText = decodeUtf8 $ head (params ! "top")
+           let bottomText = decodeUtf8 $ head (params ! "bottom")
+           S.withTop db $ Db.saveMeme topText bottomText (decodeUtf8 fileName)
+           ...
+           S.writeBS imgContent
+   ```
+   
+   You need to add *containers* library in the application Cabal dependencies.
+   
+We are able to store metadata into database. But we still can't consume it.
+Create a new handler which will list all stored memes:
+1. We want to output the memes in JSON format. Enable JSON serialization for
+   ```Meme``` record in *Db.hs*:
+   
+   ```haskell
+   {-# LANGUAGE TemplateHaskell #-}
+
+   import Data.Aeson
+   import Data.Aeson.TH
+
+   $(deriveJSON defaultOptions ''Meme)
+   ```
+   
+   This is TemplateHaskell-heavy code. It will generate the code required
+   to serialize ```Meme``` record to JSON format.
+   
+   We are using Aeson library. Add *aeson* dependency in the Cabal config.
+   
+2. Add a new route in *Lib.hs*:
+
+   ```haskell
+   routes = [ ("/", S.writeText "hello there")
+            , ("hello/:echoparam", S.method S.GET $ echoHandler)
+            , ("upload", S.method S.POST $ uploadHandler)
+            , ("list", S.method S.GET $ listHandler)
+            ]
+   ```
+   
+2. Get the memes from the database and show them:
+
+   ```haskell
+   import qualified Data.ByteString.Lazy as BL
+   import           Data.Aeson (encode)
+
+   listHandler :: S.Handler AppState AppState ()
+   listHandler = S.method S.GET $ do
+       memes <- S.withTop db $ Db.listMemes
+       S.writeBS $ BL.toStrict $ encode memes
+   ```
+
+Upload a file using the existing HTML form. Then go to http://localhost:8000/list
+and you should see the stored memes.
+
+
+
+## Emergency exit
+If you are stuck, consult this repository: https://github.com/jaspervdj/haskell-beginners-projects/tree/master/memegen
+
+
+## Followup ideas
+* Write a test suite.
+* Support more then one image format.
+* This code has a lot of shortcuts to ease the understanding. Make the code production-ready!
+* Make the code follow a good code style: https://github.com/tibbe/haskell-style-guide/blob/master/haskell-style.md
