@@ -754,10 +754,10 @@ text into an image. We will write a string into an image using well known
 
    ```
 
-That's it! Try it out.
+We are done. Try it out!
 
 
-## Disaster recovery plan
+## Disaster recovery
 
 If you are stuck, consult this repository:
 https://github.com/jaspervdj/haskell-beginners-projects/tree/master/memegen
