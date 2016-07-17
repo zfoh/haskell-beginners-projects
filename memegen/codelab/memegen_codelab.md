@@ -9,8 +9,8 @@
 * How to use a Haskell web framework (Snap).
 * How to do image processing in Haskell (using GD library).
 * How to store data into a database (SQLite).
-* No HTML or CSS knowledge (or work) required.
-* How to build a small, real world web application in Haskell.
+* How to build a small, real world web application in Haskell (no HTML or CSS
+  knowledge (or work) required).
 
 **NOTE:** Instructions are tested on Ubuntu Linux 16.04 & Microsoft Windows 10.
 
@@ -50,9 +50,9 @@ Steps:
    * On Windows, get a precompiled binary: https://www.sqlite.org/download.html
 
 
-## A new project
+## New project
 
-Create a new project using stack:
+Create a new project using Stack:
 
 ```
 stack new memegen
@@ -106,7 +106,7 @@ Haskell package installer, start here:
 https://www.haskell.org/cabal/users-guide/.
 
 
-## A web application
+## Web application
 
 To build Memegen backend we will use
 [Snap framework](http://snapframework.com/).
@@ -340,7 +340,7 @@ upload a picture. Follow the steps to add a file upload handler.
    screen. Also it will be stored in *upload* directory.
 
 
-### A metadata store
+### Metadata store
 
 To be able to list created memes, we need to store their metadata into a
 database. To make it simple, we will use SQLite database. We need:
