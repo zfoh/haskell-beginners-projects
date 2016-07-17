@@ -67,7 +67,7 @@ Setup.hs       -- Haskell package installer
 stack.yaml     -- Modern Haskell build tool config
 ```
 
-Next step is to initialize the enviroment. We need to setup the sandbox that
+Next step is to initialize the environment. We need to setup the sandbox that
 we will use for development:
 
 ```
@@ -75,7 +75,7 @@ stack setup
 ```
 
 This might take a while. Stack is downloading all required libraries to make an
-isolated development sandbox (so that we avoid colisions with system installed
+isolated development sandbox (so that we avoid collisions with system installed
 library versions). After it is completed, try to build and run the code to get
 a bit more familiar with Stack:
 
