@@ -502,7 +502,7 @@ Follow the steps:
    ```
 
    Notice that we now know type of our application in-memory state. It is
-   ```AppState``` from *App.hs*. That is why we have explicitly wrote it in
+   ```AppState``` from *App.hs*. That is why we explicitly wrote it in
    ```saveMeme``` and ```listMemes``` type signatures.
 
 6. Initialize the database in *Lib.hs*:
@@ -647,8 +647,8 @@ show you the uploaded image.
 
 ### Image processor
 
-The next step in our Meme generator is to embed top and bottom
-text into an image. We will write a string into an image using well known
+The next step in our Meme generator is to embed top and bottom text into the
+image. We will write a string onto the image using well known
 [GD library](https://libgd.github.io/pages/about.html).
 
 1. Create *Img.hs* file with the following content:
