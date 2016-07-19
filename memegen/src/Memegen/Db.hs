@@ -2,12 +2,18 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TemplateHaskell #-}
 
-module Db where
+module Memegen.Db
+    ( Meme(..),
+      tableExists,
+      createTables,
+      listMemes,
+      saveMeme
+    ) where
 
-import           App (AppState(..))
 import           Control.Monad.State (unless)
 import           Data.Aeson
 import           Data.Aeson.TH
+import           Memegen.App (AppState(..))
 import qualified Database.SQLite.Simple as D
 import qualified Data.Text as T
 import qualified Snap.Snaplet.SqliteSimple as L

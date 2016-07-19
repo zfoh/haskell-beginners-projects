@@ -15,7 +15,10 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     Lib, App, Db, Img
+  exposed-modules:     Memegen.App
+                     , Memegen.Db
+                     , Memegen.Img
+                     , Memegen.Lib
   build-depends:       base >= 4.7 && < 5
                      , aeson
                      , bytestring

@@ -1,6 +1,6 @@
 module Main where
 
-import Lib (memegenEntry)
+import Memegen.Lib (memegenEntry)
 
 main :: IO ()
 main = memegenEntry

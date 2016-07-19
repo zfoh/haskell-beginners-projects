@@ -1,10 +1,9 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Lib
+module Memegen.Lib
     ( memegenEntry
     ) where
 
-import           App (AppState(..), db)
 import           Control.Concurrent (withMVar)
 import           Control.Lens ((^#))
 import           Control.Monad.State (liftM, liftIO)
@@ -13,12 +12,13 @@ import           Data.Int (Int64(..))
 import           Data.Map.Lazy ((!))
 import           Data.Maybe (fromJust)
 import           Data.Text.Encoding (decodeUtf8)
-import           Img (createMeme)
+import           Memegen.App (AppState(..), db)
+import           Memegen.Img (createMeme)
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Enumerator.List as EL
 import qualified Data.Text as T
-import qualified Db
+import qualified Memegen.Db as Db
 import qualified Snap as S
 import qualified Snap.Snaplet.SqliteSimple as S
 import qualified Snap.Util.FileServe as S

@@ -2,7 +2,10 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell   #-}
 
-module App where
+module Memegen.App
+    ( AppState(..),
+      db
+    ) where
 
 import           Control.Lens (makeLenses)
 import           Control.Monad.State (get)

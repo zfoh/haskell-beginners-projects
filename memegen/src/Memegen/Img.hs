@@ -1,4 +1,4 @@
-module Img
+module Memegen.Img
     ( createMeme
     ) where
 
