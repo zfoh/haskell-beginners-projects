@@ -12,7 +12,7 @@
 * How to build a small, real world web application in Haskell (no HTML or CSS
   knowledge (or work) required).
 
-**NOTE:** Instructions are tested on Ubuntu Linux 16.04 & Microsoft Windows 10.
+**NOTE:** Instructions are tested on Ubuntu Linux 16.04 & Microsoft Windows 8.
 
 Let's start!
 
@@ -31,6 +31,11 @@ Steps:
      package might be outdated (e.g., on Ubuntu, Stack is not included).
    * If you only miss Stack, get it from here:
      http://docs.haskellstack.org/en/stable/README/
+   * *Windows:* If you get certificate error when running Stack, open Internet
+     Explorer and visit the following pages (note the *https* protocol):
+       * https://www.haskell.org
+       * https://www.github.com
+       * https://www.stackage.org
 2. Install GD library
    * On Debian-based distributions, run:
 
@@ -47,7 +52,8 @@ Steps:
      sudo apt-get install libsqlite3-dev
      ```
 
-   * On Windows, get a precompiled binary: https://www.sqlite.org/download.html
+   * On Windows, get a precompiled library and unpack it in *Windows/System32*:
+     https://www.sqlite.org/download.html
 
 
 ## New project
@@ -786,6 +792,7 @@ text
 ## Followup ideas
 
 * Write a test suite.
+* Implement pagination for listing memes.
 * Support more then one image format.
 * This code has a lot of shortcuts to ease the understanding.
   Make the code production-ready!
