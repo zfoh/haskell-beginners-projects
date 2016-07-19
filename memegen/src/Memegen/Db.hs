@@ -3,11 +3,11 @@
 {-# LANGUAGE TemplateHaskell #-}
 
 module Memegen.Db
-    ( Meme(..),
-      tableExists,
-      createTables,
-      listMemes,
-      saveMeme
+    ( Meme(..)
+    , tableExists
+    , createTables
+    , listMemes
+    , saveMeme
     ) where
 
 import           Control.Monad.State (unless)

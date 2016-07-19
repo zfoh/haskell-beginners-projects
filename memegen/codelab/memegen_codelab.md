@@ -33,9 +33,11 @@ Steps:
      http://docs.haskellstack.org/en/stable/README/
    * *Windows:* If you get certificate error when running Stack, open Internet
      Explorer and visit the following pages (note the *https* protocol):
-       * https://www.haskell.org
-       * https://www.github.com
-       * https://www.stackage.org
+
+     * https://www.haskell.org
+     * https://www.github.com
+     * https://www.stackage.org
+
 2. Install GD library
    * On Debian-based distributions, run:
 
@@ -117,10 +119,16 @@ https://www.haskell.org/cabal/users-guide/.
 To build Memegen backend we will use
 [Snap framework](http://snapframework.com/).
 Start by defining the *application entry point* and *importing Snap framework*.
-Open *src/Lib.hs* and change the module definition to:
+
+Create a directory *src/Memegen*. Creating a new directory will enable us to
+prefix our modules. That will create a more comprehensible code overview.
+
+1. Move *src/Lib.hs* to *src/Memegen/Lib.hs*.
+
+2. Open *Lib.hs* and change the module definition to:
 
 ```haskell
-module Lib
+module Memegen.Lib
     ( memegenEntry
     ) where
 ```
@@ -145,16 +153,19 @@ library dependency:
 ```
 library
   ...
+  exposed-modules:     Memegen.Lib
   build-depends:       base >= 4.7 && < 5
                      , snap
 ```
 
 To make the code compile successfully, we still need to make two changes:
+
 * Add *OverloadedStrings* syntax extension. It is required by ```makeSnaplet```
   as it actually takes ```Text``` and not ```String```. By enabling
   *OverloadedStrings* syntax extension we make this conversion automatic
   (we make string literals polymorphic over ```IsString``` class).
   Add ```{-# LANGUAGE OverloadedStrings #-}``` on top of *Lib.hs*.
+* Change *app/Main.hs* import from ```Lib``` to ```Memegen.Lib```.
 * Change *app/Main.hs* to call ```memegenEntry``` instead of ```someFunc```.
 
 If you got everything correctly, your *Lib.hs* will look like this:
@@ -162,7 +173,7 @@ If you got everything correctly, your *Lib.hs* will look like this:
 ```haskell
 {-# LANGUAGE OverloadedStrings #-}
 
-module Lib
+module Memegen.Lib
     ( memegenEntry
     ) where
 
@@ -358,14 +369,17 @@ database. To make it simple, we will use SQLite database. We need:
 
 Follow the steps:
 
-1. Create file *App.hs* which will hold application state:
+1. Create file *src/Memegen/App.hs* which will hold application state:
 
    ```haskell
    {-# LANGUAGE FlexibleInstances #-}
    {-# LANGUAGE OverloadedStrings #-}
    {-# LANGUAGE TemplateHaskell   #-}
 
-   module App where
+   module Memegen.App
+       ( AppState(..)
+       , db
+       ) where
 
    import           Control.Lens (makeLenses)
    import           Control.Monad.State (get)
@@ -382,13 +396,14 @@ Follow the steps:
        getSqliteState = S.with db get
    ```
 
-   Export *App* module in Cabal config, and add *lens* and
+   Export *Memegen.App* module in Cabal config, and add *lens* and
    *snaplet-sqlite-simple* dependencies:
 
    ```
    library
     hs-source-dirs:      src
-    exposed-modules:     Lib, App
+    exposed-modules:     Memegen.Lib
+                       , Memegen.App
     build-depends:       base >= 4.7 && < 5
                        , lens
                        , snaplet-sqlite-simple
@@ -435,12 +450,16 @@ Follow the steps:
 
    Make sure that the project builds.
 
-2. Create file *Db.hs* which will hold data model, and data access layer.
+2. Create file *src/Memegen/Db.hs* which will hold data model,
+   and data access layer.
 
 3. Put the data model in it:
 
    ```haskell
    module Db where
+   module Memegen.Db
+       ( Meme(..)
+       ) where
 
    import qualified Data.Text as T
    import qualified Snap.Snaplet.SqliteSimple as L
@@ -462,6 +481,12 @@ Follow the steps:
    ```haskell
    {-# LANGUAGE OverloadedStrings #-}
    {-# LANGUAGE ScopedTypeVariables #-}
+
+   module Memegen.Db
+       ( Meme(..)
+       , tableExists
+       , createTables
+       ) where
 
    import qualified Database.SQLite.Simple as D
    import           Control.Monad.State (unless)
@@ -492,7 +517,15 @@ Follow the steps:
 5. Write functions to read and write database data:
 
    ```haskell
-   import App (AppState(..))
+   module Memegen.Db
+       ( Meme(..)
+       , tableExists
+       , createTables
+       , listMemes
+       , saveMeme
+       ) where
+
+   import Memegen.App (AppState(..))
    import Snap.Snaplet (Handler(..))
 
    -- | Retrieve all memes.
@@ -514,9 +547,9 @@ Follow the steps:
 6. Initialize the database in *Lib.hs*:
 
    ```haskell
-   import qualified Db
+   import qualified Memegen.Db as Db
    import qualified Snap.Snaplet.SqliteSimple as S
-   import           App (AppState(..), db)
+   import           Memegen.App (AppState(..), db)
    import           Control.Concurrent (withMVar)
    import           Control.Lens ((^#))
 
@@ -657,10 +690,10 @@ The next step in our Meme generator is to embed top and bottom text into the
 image. We will write a string onto the image using well known
 [GD library](https://libgd.github.io/pages/about.html).
 
-1. Create *Img.hs* file with the following content:
+1. Create *src/Memegen/Img.hs* file with the following content:
 
    ```haskell
-   module Img
+   module Memegen.Img
        ( createMeme
        ) where
 
@@ -700,12 +733,15 @@ image. We will write a string onto the image using well known
    Note that this setup works only with *JPEG* images. The GD library supports
    more formats.
 
-2. Expose ```Img``` module and add *gd* library dependency:
+2. Expose ```Memegen.Img``` module and add *gd* library dependency:
 
    ```
    library
      hs-source-dirs:      src
-     exposed-modules:     Lib, App, Db, Img
+     exposed-modules:     Memegen.Lib
+                        , Memegen.App
+                        , Memegen.Db
+                        , Memegen.Img
      build-depends:       base >= 4.7 && < 5
                         , gd
                         ...
@@ -714,7 +750,7 @@ image. We will write a string onto the image using well known
 3. Hook up ```createMeme``` in the upload request handler:
 
    ```haskell
-   import Img (createMeme)
+   import Memegen.Img (createMeme)
 
    uploadHandler = S.method S.POST doUpload
      where

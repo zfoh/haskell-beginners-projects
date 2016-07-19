@@ -3,8 +3,8 @@
 {-# LANGUAGE TemplateHaskell   #-}
 
 module Memegen.App
-    ( AppState(..),
-      db
+    ( AppState(..)
+    , db
     ) where
 
 import           Control.Lens (makeLenses)
