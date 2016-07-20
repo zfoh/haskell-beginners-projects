@@ -12,7 +12,8 @@
 * How to build a small, real world web application in Haskell (no HTML or CSS
   knowledge (or work) required).
 
-**NOTE:** Instructions are tested on Ubuntu Linux 16.04 & Microsoft Windows 8.
+**NOTE:** Instructions are tested on Ubuntu Linux 16.04, OS X, and Microsoft
+Windows 8.
 
 Let's start!
 
@@ -44,9 +45,11 @@ Steps:
      ```sh
      sudo apt-get install libgd-dev
      ```
+   * On OS X use [Homebrew](http://brew.sh/) to `brew install gd`
 
    * On Windows, get a precompiled binary:
      http://gnuwin32.sourceforge.net/packages/gd.htm
+
 3. Install SQLite
    * On Debian-based distributions, run:
 
@@ -114,9 +117,76 @@ Haskell package installer, start here:
 https://www.haskell.org/cabal/users-guide/.
 
 
+### Auto-reloading GHCi session
+
+There is no mature Haskell IDE yet. One thing that I (Simon) have found to
+work well for console-based development is
+[`ghcid`](https://github.com/ndmitchell/ghcid), which provides a convenient
+auto-reloading GHCi daemon. It is setup as follows.
+
+
+1. Install `ghcid` using `stack install ghcid` and make sure the the reported
+   install path is on your PATH.
+2. Let's have a look at its help output.
+   ```
+   > ghcid --help
+   Auto reloading GHCi daemon v0.6.4
+
+   ghcid [OPTIONS] [MODULE]
+
+   Common flags:
+     -c --command=COMMAND  Command to run (defaults to ghci or cabal repl)
+     -T --test=EXPR        Command to run after successful loading
+     -W --warnings         Allow tests to run even with warnings
+     -S --no-status        Suppress status messages
+     -h --height=INT       Number of lines to use (defaults to console height)
+     -w --width=INT        Number of columns to use (defaults to console width)
+     -t --topmost          Set window topmost (Windows only)
+     -n --notitle          Don't update the shell title/icon
+        --reload=PATH      Reload when the given file or directory contents
+                           change (defaults to none)
+        --restart=PATH     Restart the command when the given file or directory
+                           contents change (defaults to .ghci and any .cabal file)
+     -C --directory=DIR    Set the current directory
+     -o --outputfile=FILE  File to write the full output to
+     -? --help             Display help message
+     -V --version          Print version information
+        --numeric-version  Print just the version number
+     -v --verbose          Loud verbosity
+     -q --quiet            Quiet verbosity
+    ```
+3. Run `ghcid` with the following flags.
+
+   ```
+   ghcid -c'stack ghci --main-is=memegen:memegen-exe'
+   ```
+
+   This instructs `ghcid` to start a GHCi session with all the module
+   necessary to build `memegen-exe` in the `memegen` .cabal file.
+
+4. Insert an error in the `Lib.hs` file and observe how it is reported by
+   `ghcid`. Note that this exploits the built-in support for `stack` in
+   `ghcid-0.6.4`.
+
+5. You can also auto-reload the `main` function of `memegen-exe` using the
+   `--test` flag of `ghcid` as follows.
+
+   ```
+   ghcid -c'stack ghci --main-is=memegen:memegen-exe' --test='main'
+   ```
+
+   This is super handy to auto-recompile and load your `memegen` server on
+   file changes.
+
+
+Running a split console-screen setup with an editor, a `ghcid` session for
+immediate error messages, and a `stack ghci` session for easy REPL
+interaction provides a simple, but reasonably functional IDE.
+
+
 ## Web application
 
-To build Memegen backend we will use
+To build the Memegen backend we will use the
 [Snap framework](http://snapframework.com/).
 Start by defining the *application entry point* and *importing Snap framework*.
 
@@ -133,7 +203,7 @@ module Memegen.Lib
     ) where
 ```
 
-Import Snap framework, write the entry point:
+Import the Snap framework and write the entry point:
 
 ```haskell
 import qualified Snap as S
@@ -829,7 +899,9 @@ text
 
 * Write a test suite.
 * Implement pagination for listing memes.
-* Support more then one image format.
+* Support more than one image format.
+* Store image files under the hash of their content to properly deduplicate
+  images and isolate sessions from each other.
 * This code has a lot of shortcuts to ease the understanding.
   Make the code production-ready!
 * Make the code follow a good code style:
