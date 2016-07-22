@@ -55,7 +55,7 @@ appInit = S.makeSnaplet "memegen" "Meme generator." Nothing $ do
 
 -- | The application's routes.
 routes :: [(B.ByteString, S.Handler AppState AppState ())]
-routes = [ ("/", S.ifTop $ S.writeText "hello there")
+routes = [ ("/", S.ifTop $ S.writeBS "hello there")
          , ("hello/:echoparam", method GET $ echoHandler)
          , ("upload", method POST $ uploadHandler)
          , ("list", method GET $ listHandler)
