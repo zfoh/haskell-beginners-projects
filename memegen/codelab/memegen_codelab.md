@@ -76,7 +76,7 @@ Setup.hs       -- Haskell package installer
 stack.yaml     -- Modern Haskell build tool config
 ```
 
-Next step is to initialize the environment. We need to setup the sandbox that
+Next step is to initialize the environment. We need to set up the sandbox that
 we will use for development:
 
 ```
@@ -116,7 +116,7 @@ https://www.haskell.org/cabal/users-guide/.
 There is no mature Haskell IDE yet. One thing that I (Simon) have found to
 work well for console-based development is
 [`ghcid`](https://github.com/ndmitchell/ghcid), which provides a convenient
-auto-reloading GHCi daemon. It is setup as follows.
+auto-reloading GHCi daemon. It is set up as follows.
 
 
 1. Install `ghcid` using `stack install ghcid` and make sure the the reported
@@ -302,7 +302,7 @@ arguments to request handlers. Expand the routes with ```echoHandler```:
 
 ```haskell
 routes = [ ("/", S.ifTop $ S.writeText "hello there")
-         , ("hello/:echoparam", S.method S.GET $ echoHandler)
+         , ("hello/:echoparam", S.method S.GET echoHandler)
          ]
 
 echoHandler :: S.Handler a b ()
@@ -328,8 +328,8 @@ upload a picture. Follow the steps to add a file upload handler.
    ```haskell
    routes :: [(B.ByteString, S.Handler a b ())]
    routes = [ ("/", S.ifTop $ S.writeText "hello there")
-            , ("hello/:echoparam", S.method S.GET $ echoHandler)
-            , ("upload", S.method S.POST $ uploadHandler)
+            , ("hello/:echoparam", S.method S.GET echoHandler)
+            , ("upload", S.method S.POST uploadHandler)
             ]
    ```
 
@@ -705,9 +705,9 @@ Create a new handler which will list all stored memes:
 
    ```haskell
    routes = [ ("/", S.ifTop $ S.writeText "hello there")
-            , ("hello/:echoparam", S.method S.GET $ echoHandler)
-            , ("upload", S.method S.POST $ uploadHandler)
-            , ("list", S.method S.GET $ listHandler)
+            , ("hello/:echoparam", S.method S.GET echoHandler)
+            , ("upload", S.method S.POST uploadHandler)
+            , ("list", S.method S.GET listHandler)
             ]
    ```
 
@@ -738,9 +738,9 @@ Add a new route in *Lib.hs*:
 import qualified Snap.Util.FileServe as S
 
 routes = [ ("/", S.ifTop $ S.writeText "hello there")
-         , ("hello/:echoparam", S.method S.GET $ echoHandler)
-         , ("upload", S.method S.POST $ uploadHandler)
-         , ("list", S.method S.GET $ listHandler)
+         , ("hello/:echoparam", S.method S.GET echoHandler)
+         , ("upload", S.method S.POST uploadHandler)
+         , ("list", S.method S.GET listHandler)
          , ("image", S.serveDirectory "upload")
          ]
 ```
