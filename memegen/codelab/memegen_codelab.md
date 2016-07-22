@@ -50,6 +50,22 @@ Steps:
    * On Windows, get a precompiled binary:
      http://gnuwin32.sourceforge.net/packages/gd.htm
 
+https://msys2.github.io/
+download msys2-x86_64
+install it
+
+1) pacman -Sy pacman
+2) Restart msys2
+3) pacman -Syu
+4) Restart msys2
+5) pacman -Su
+6) Restart msys2
+7) pacman -S mingw64/mingw-w64-x86_64-gd
+
+open cmd prompt
+cd to the project
+stack build --extra-include-dirs=C:\msys64\mingw64\include --extra-lib-dirs=C:\msys64\mingw64\lib
+
 3. Install SQLite
    * On Debian-based distributions, run:
 
@@ -108,8 +124,8 @@ someFunc
 The logic behind is contained in: *src/Lib.hs*. Check it out.
 
 A few more useful Stack commands:
-* Load your module inside of Haskell REPL: ```stack ghci```
-* Run tests: ```stack test```
+* Load your module inside of Haskell REPL: `stack ghci`
+* Run tests: `stack test`
 
 Pretty awesome! For self-study, see the following guide:
 http://docs.haskellstack.org/en/stable/GUIDE/. To learn more about Cabal and
@@ -117,7 +133,7 @@ Haskell package installer, start here:
 https://www.haskell.org/cabal/users-guide/.
 
 
-### Auto-reloading GHCi session
+## Web application
 
 There is no mature Haskell IDE yet. One thing that I (Simon) have found to
 work well for console-based development is
@@ -216,8 +232,8 @@ appInit = S.makeSnaplet "memegen" "Meme generator." Nothing $ do
     S.addRoutes []
 ```
 
-Try to build the application by running ```stack build```. It will fail.
-The ```snap``` dependency is missing. Open Cabal configuration and add the
+Try to build the application by running `stack build`. It will fail.
+The `snap` dependency is missing. Open Cabal configuration and add the
 library dependency:
 
 ```
@@ -230,13 +246,13 @@ library
 
 To make the code compile successfully, we still need to make two changes:
 
-* Add *OverloadedStrings* syntax extension. It is required by ```makeSnaplet```
-  as it actually takes ```Text``` and not ```String```. By enabling
+* Add *OverloadedStrings* syntax extension. It is required by `makeSnaplet`
+  as it actually takes `Text` and not `String`. By enabling
   *OverloadedStrings* syntax extension we make this conversion automatic
-  (we make string literals polymorphic over ```IsString``` class).
-  Add ```{-# LANGUAGE OverloadedStrings #-}``` on top of *Lib.hs*.
-* Change *app/Main.hs* import from ```Lib``` to ```Memegen.Lib```.
-* Change *app/Main.hs* to call ```memegenEntry``` instead of ```someFunc```.
+  (we make string literals polymorphic over `IsString` class).
+  Add `{-# LANGUAGE OverloadedStrings #-}` on top of *Lib.hs*.
+* Change *app/Main.hs* import from `Lib` to `Memegen.Lib`.
+* Change *app/Main.hs* to call `memegenEntry` instead of `someFunc`.
 
 If you got everything correctly, your *Lib.hs* will look like this:
 
@@ -282,14 +298,14 @@ No handler accepted "/"
 
 We haven't configured any routes. Let's fix that! Open *Lib.hs* and add:
 
-```
+```haskell
 routes :: [(B.ByteString, S.Handler a b ())]
 routes = [ ("/", S.writeText "hello there")
          ]
 ```
 
 We still have to:
-* Pass the routes to ```S.addRoutes```,
+* Pass the routes to `S.addRoutes`,
 
   ```haskell
   import qualified Data.ByteString as B
@@ -301,10 +317,10 @@ We still have to:
 * Add *bytestring* in Cabal library dependency.
 
 If you build & run application, [localhost:8000](http://localhost:8000)
-will say ```hello there```.
+will say `hello there`.
 
 Before we jump to more advanced topics, let's learn how to pass
-arguments to request handlers. Expand the routes with ```echoHandler```:
+arguments to request handlers. Expand the routes with `echoHandler`:
 
 ```haskell
 routes = [ ("/", S.writeText "hello there")
@@ -321,7 +337,7 @@ echoHandler = S.method S.GET doHandle
 ```
 
 [/hello/haskell](http://localhost:8000/hello/haskell)
-will now say: ```Hello haskell```!
+will now say: `Hello haskell`!
 
 
 ### File upload
@@ -329,7 +345,7 @@ will now say: ```Hello haskell```!
 We have a working web application. To create a meme, we need to be able to
 upload a picture. Follow the steps to add a file upload handler.
 
-1. Extend the routes with a file upload handler mapped to ```/upload```:
+1. Extend the routes with a file upload handler mapped to `/upload`:
 
    ```haskell
    routes :: [(B.ByteString, S.Handler a b ())]
@@ -611,8 +627,8 @@ Follow the steps:
    ```
 
    Notice that we now know type of our application in-memory state. It is
-   ```AppState``` from *App.hs*. That is why we explicitly wrote it in
-   ```saveMeme``` and ```listMemes``` type signatures.
+   `AppState` from *App.hs*. That is why we explicitly wrote it in
+   `saveMeme` and `listMemes` type signatures.
 
 6. Initialize the database in *Lib.hs*:
 
@@ -662,7 +678,7 @@ Follow the steps:
    ```
 
 7. Store the meme metadata at the upload time. Hook the meme saving
-   logic inside of ```uploadHandler```:
+   logic inside of `uploadHandler`:
 
    ```haskell
    import Data.Map.Lazy ((!))
@@ -689,7 +705,7 @@ We are able to store metadata in database. But we still can't consume it.
 Create a new handler which will list all stored memes:
 
 1. We want to output the memes in JSON format. Enable JSON serialization for
-   ```Meme``` record in *Db.hs*:
+   `Meme` record in *Db.hs*:
 
    ```haskell
    {-# LANGUAGE TemplateHaskell #-}
@@ -701,7 +717,7 @@ Create a new handler which will list all stored memes:
    ```
 
    This is TemplateHaskell-heavy code. It will generate the code required
-   to serialize ```Meme``` record to JSON format.
+   to serialize `Meme` record to JSON format.
 
    We are using Aeson library. Add *aeson* dependency in the Cabal config.
 
@@ -803,7 +819,7 @@ image. We will write a string onto the image using well known
    Note that this setup works only with *JPEG* images. The GD library supports
    more formats.
 
-2. Expose ```Memegen.Img``` module and add *gd* library dependency:
+2. Expose `Memegen.Img` module and add *gd* library dependency:
 
    ```
    library
@@ -817,7 +833,7 @@ image. We will write a string onto the image using well known
                         ...
    ```
 
-3. Hook up ```createMeme``` in the upload request handler:
+3. Hook up `createMeme` in the upload request handler:
 
    ```haskell
    import Memegen.Img (createMeme)
