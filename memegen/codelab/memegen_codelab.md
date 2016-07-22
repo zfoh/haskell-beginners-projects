@@ -875,6 +875,14 @@ image. We will write a string onto the image using well known
 
 We are done. Try it out!
 
+*Note*: On Mac OS X, you might get an error message
+
+```
+Missing dependency on a foreign library:
+    * Missing (or bad) header file: gd.h
+```
+
+when building with the gd dependency for the first time. You can solve this issue by building with the additional parameters ` --extra-lib-dirs=/usr/local/lib/ --extra-include-dirs=/usr/local/include/` (maybe you need to adapt this to your homebrew installation). These parameters only need to be added once, when the gd library is built.
 
 ## Disaster recovery
 
