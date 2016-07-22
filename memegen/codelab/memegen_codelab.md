@@ -578,7 +578,21 @@ Follow the steps:
                     \image_filepath TEXT)")
    ```
 
-   Make sure to add *sqlite-simple* as a Cabal dependency.
+   Make sure to
+  
+      * add *sqlite-simple* as a Cabal dependency
+      * expose the ```Memegen.Db``` module:
+
+   ```
+   library
+     hs-source-dirs:      src
+     exposed-modules:     Memegen.Lib
+                        , Memegen.App
+                        , Memegen.Db
+     build-depends:       base >= 4.7 && < 5
+                        , sqlite-simple
+                        ...
+   ```
 
 5. Write functions to read and write database data:
 
