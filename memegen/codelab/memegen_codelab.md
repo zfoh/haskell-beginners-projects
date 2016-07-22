@@ -707,7 +707,7 @@ Create a new handler which will list all stored memes:
    routes = [ ("/", S.ifTop $ S.writeText "hello there")
             , ("hello/:echoparam", S.method S.GET echoHandler)
             , ("upload", S.method S.POST uploadHandler)
-            , ("list", S.method S.GET $ listHandler)
+            , ("list", S.method S.GET listHandler)
             ]
    ```
 
@@ -740,7 +740,7 @@ import qualified Snap.Util.FileServe as S
 routes = [ ("/", S.ifTop $ S.writeText "hello there")
          , ("hello/:echoparam", S.method S.GET echoHandler)
          , ("upload", S.method S.POST uploadHandler)
-         , ("list", S.method S.GET $ listHandler)
+         , ("list", S.method S.GET listHandler)
          , ("image", S.serveDirectory "upload")
          ]
 ```
