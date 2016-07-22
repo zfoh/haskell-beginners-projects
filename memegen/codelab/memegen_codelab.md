@@ -12,8 +12,8 @@
 * How to build a small, real world web application in Haskell (no HTML or CSS
   knowledge (or work) required).
 
-**NOTE:** Instructions are tested on Ubuntu Linux 16.04, OS X, and Microsoft
-Windows 8.
+**NOTE:** Instructions are tested on Ubuntu Linux 16.04, OS X. For help with
+Microsoft Windows, please email ivan.kristo@gmail.com.
 
 Let's start!
 
@@ -47,19 +47,12 @@ Steps:
      ```
    * On OS X use [Homebrew](http://brew.sh/) to `brew install gd`
 
-   * On Windows, get a precompiled binary:
-     http://gnuwin32.sourceforge.net/packages/gd.htm
-
 3. Install SQLite
    * On Debian-based distributions, run:
 
      ```sh
      sudo apt-get install libsqlite3-dev
      ```
-
-   * On Windows, get a precompiled library and unpack it in *Windows/System32*:
-     https://www.sqlite.org/download.html
-
 
 ## New project
 
