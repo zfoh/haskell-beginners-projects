@@ -301,7 +301,7 @@ Before we jump to more advanced topics, let's learn how to pass
 arguments to request handlers. Expand the routes with ```echoHandler```:
 
 ```haskell
-routes = [ ("/", S.writeText "hello there")
+routes = [ ("/", S.ifTop $ S.writeText "hello there")
          , ("hello/:echoparam", S.method S.GET $ echoHandler)
          ]
 
