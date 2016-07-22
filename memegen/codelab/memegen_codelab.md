@@ -76,7 +76,7 @@ Setup.hs       -- Haskell package installer
 stack.yaml     -- Modern Haskell build tool config
 ```
 
-Next step is to initialize the environment. We need to setup the sandbox that
+Next step is to initialize the environment. We need to set up the sandbox that
 we will use for development:
 
 ```
@@ -116,7 +116,7 @@ https://www.haskell.org/cabal/users-guide/.
 There is no mature Haskell IDE yet. One thing that I (Simon) have found to
 work well for console-based development is
 [`ghcid`](https://github.com/ndmitchell/ghcid), which provides a convenient
-auto-reloading GHCi daemon. It is setup as follows.
+auto-reloading GHCi daemon. It is set up as follows.
 
 
 1. Install `ghcid` using `stack install ghcid` and make sure the the reported
