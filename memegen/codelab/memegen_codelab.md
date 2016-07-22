@@ -578,10 +578,7 @@ Follow the steps:
                     \image_filepath TEXT)")
    ```
 
-   Make sure to
-  
-      * add *sqlite-simple* as a Cabal dependency
-      * expose the ```Memegen.Db``` module:
+   Expose the ```Memegen.Db``` module and add *sqlite-simple* as a Cabal dependency:
 
    ```
    library
