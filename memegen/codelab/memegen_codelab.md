@@ -329,7 +329,7 @@ upload a picture. Follow the steps to add a file upload handler.
    routes :: [(B.ByteString, S.Handler a b ())]
    routes = [ ("/", S.ifTop $ S.writeText "hello there")
             , ("hello/:echoparam", S.method S.GET echoHandler)
-            , ("upload", S.method S.POST $ uploadHandler)
+            , ("upload", S.method S.POST uploadHandler)
             ]
    ```
 
@@ -706,7 +706,7 @@ Create a new handler which will list all stored memes:
    ```haskell
    routes = [ ("/", S.ifTop $ S.writeText "hello there")
             , ("hello/:echoparam", S.method S.GET echoHandler)
-            , ("upload", S.method S.POST $ uploadHandler)
+            , ("upload", S.method S.POST uploadHandler)
             , ("list", S.method S.GET $ listHandler)
             ]
    ```
@@ -739,7 +739,7 @@ import qualified Snap.Util.FileServe as S
 
 routes = [ ("/", S.ifTop $ S.writeText "hello there")
          , ("hello/:echoparam", S.method S.GET echoHandler)
-         , ("upload", S.method S.POST $ uploadHandler)
+         , ("upload", S.method S.POST uploadHandler)
          , ("list", S.method S.GET $ listHandler)
          , ("image", S.serveDirectory "upload")
          ]
