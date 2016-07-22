@@ -276,9 +276,9 @@ No handler accepted "/"
 
 We haven't configured any routes. Let's fix that! Open *Lib.hs* and add:
 
-```
+```haskell
 routes :: [(B.ByteString, S.Handler a b ())]
-routes = [ ("/", S.writeText "hello there")
+routes = [ ("/", S.ifTop $ S.writeText "hello there")
          ]
 ```
 
@@ -327,7 +327,7 @@ upload a picture. Follow the steps to add a file upload handler.
 
    ```haskell
    routes :: [(B.ByteString, S.Handler a b ())]
-   routes = [ ("/", S.writeText "hello there")
+   routes = [ ("/", S.ifTop $ S.writeText "hello there")
             , ("hello/:echoparam", S.method S.GET $ echoHandler)
             , ("upload", S.method S.POST $ uploadHandler)
             ]
@@ -702,7 +702,7 @@ Create a new handler which will list all stored memes:
 2. Add a new route in *Lib.hs*:
 
    ```haskell
-   routes = [ ("/", S.writeText "hello there")
+   routes = [ ("/", S.ifTop $ S.writeText "hello there")
             , ("hello/:echoparam", S.method S.GET $ echoHandler)
             , ("upload", S.method S.POST $ uploadHandler)
             , ("list", S.method S.GET $ listHandler)
@@ -735,7 +735,7 @@ Add a new route in *Lib.hs*:
 ```haskell
 import qualified Snap.Util.FileServe as S
 
-routes = [ ("/", S.writeText "hello there")
+routes = [ ("/", S.ifTop $ S.writeText "hello there")
          , ("hello/:echoparam", S.method S.GET $ echoHandler)
          , ("upload", S.method S.POST $ uploadHandler)
          , ("list", S.method S.GET $ listHandler)
