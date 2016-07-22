@@ -397,7 +397,7 @@ upload a picture. Follow the steps to add a file upload handler.
    Don't forget to add *directory* library dependency in Cabal config.
 
 4. Next thing we need is an HTML file upload form. Create an empty HTML
-   file and paste the following HTML:
+   file anywhere in your local file system and paste the following HTML:
 
    ```html
    <html>
@@ -414,7 +414,9 @@ upload a picture. Follow the steps to add a file upload handler.
    ```
 
    This will be the HTML form which we will use through the rest
-   of the project.
+   of the project. We don't serve this file through the local http
+   server but merely open the file from the local file system in
+   the browser to trigger our app.
 
 5. Build & run the application. Open the HTML file in a web browser, and
    upload an image. The image should be presented to you on the following
