@@ -9,7 +9,7 @@
 * How to use a Haskell web framework (Snap).
 * How to do image processing in Haskell (using GD library).
 * How to store data into a database (SQLite).
-* How to build a small, real world web application in Haskell (no HTML or CSS
+* How to build a small, real-world web application in Haskell (no HTML or CSS
   knowledge (or work) required).
 
 **NOTE:** Instructions are tested on Ubuntu Linux 16.04, OS X. For help with
@@ -76,7 +76,7 @@ Setup.hs       -- Haskell package installer
 stack.yaml     -- Modern Haskell build tool config
 ```
 
-Next step is to initialize the environment. We need to set up the sandbox that
+The next step is to initialize the environment. We need to set up the sandbox that
 we will use for development:
 
 ```
@@ -84,8 +84,8 @@ stack setup
 ```
 
 This might take a while. Stack is downloading all required libraries to make an
-isolated development sandbox (so that we avoid collisions with system installed
-library version). After it is completed, try to build and run the code to get
+isolated development sandbox (so that we avoid collisions with libraries in different versions
+that are installed in the system). After it is completed, try to build and run the code to get
 a bit more familiar with Stack:
 
 ```
@@ -99,7 +99,7 @@ It will print:
 someFunc
 ```
 
-The logic behind is contained in: *src/Lib.hs*. Check it out.
+The logic behind this is contained in: *src/Lib.hs*. Check it out.
 
 A few more useful Stack commands:
 * Load your module inside of Haskell REPL: ```stack ghci```
@@ -119,7 +119,7 @@ work well for console-based development is
 auto-reloading GHCi daemon. It is set up as follows.
 
 
-1. Install `ghcid` using `stack install ghcid` and make sure the the reported
+1. Install `ghcid` using `stack install ghcid` and make sure the reported
    install path is on your PATH.
 2. Let's have a look at its help output.
    ```
@@ -155,7 +155,7 @@ auto-reloading GHCi daemon. It is set up as follows.
    ghcid -c'stack ghci --main-is=memegen:memegen-exe'
    ```
 
-   This instructs `ghcid` to start a GHCi session with all the module
+   This instructs `ghcid` to start a GHCi session with all the modules
    necessary to build `memegen-exe` in the `memegen` .cabal file.
 
 4. Insert an error in the `Lib.hs` file and observe how it is reported by
@@ -182,7 +182,7 @@ interaction provides a simple, but reasonably functional IDE.
 
 To build the Memegen backend we will use the
 [Snap framework](http://snapframework.com/).
-Start by defining the *application entry point* and *importing Snap framework*.
+Start by defining the *application entry point* and importing the *Snap framework*.
 
 Create a directory *src/Memegen*. Creating a new directory will enable us to
 prefix our modules. That will create a more comprehensible code overview.
@@ -211,7 +211,7 @@ appInit = S.makeSnaplet "memegen" "Meme generator." Nothing $ do
 ```
 
 Try to build the application by running ```stack build```. It will fail.
-The ```snap``` dependency is missing. Open Cabal configuration and add the
+The ```snap``` dependency is missing. Open the Cabal configuration and add the
 library dependency:
 
 ```
@@ -224,12 +224,12 @@ library
 
 To make the code compile successfully, we still need to make two changes:
 
-* Add *OverloadedStrings* syntax extension. It is required by ```makeSnaplet```
-  as it actually takes ```Text``` and not ```String```. By enabling
+* Add the *OverloadedStrings* syntax extension. It is required by ```makeSnaplet```
+  as it actually takes ```Text``` and not ```String```. By enabling the
   *OverloadedStrings* syntax extension we make this conversion automatic
-  (we make string literals polymorphic over ```IsString``` class).
+  (we make string literals polymorphic over the ```IsString``` class).
   Add ```{-# LANGUAGE OverloadedStrings #-}``` on top of *Lib.hs*.
-* Change *app/Main.hs* import from ```Lib``` to ```Memegen.Lib```.
+* Change the *app/Main.hs* import from ```Lib``` to ```Memegen.Lib```.
 * Change *app/Main.hs* to call ```memegenEntry``` instead of ```someFunc```.
 
 If you got everything correctly, your *Lib.hs* will look like this:
@@ -292,9 +292,9 @@ We still have to:
      S.addRoutes routes
   ```
 
-* Add *bytestring* in Cabal library dependency.
+* Add *bytestring* in the Cabal library dependency.
 
-If you build & run application, [localhost:8000](http://localhost:8000)
+If you build & run the application, [localhost:8000](http://localhost:8000)
 will say ```hello there```.
 
 Before we jump to more advanced topics, let's learn how to pass
@@ -382,9 +382,9 @@ upload a picture. Follow the steps to add a file upload handler.
    filepath
    ```
 
-3. If *upload* directory doesn't exist, writing the uploaded
-   file will fail. We can solve this by creating *upload* directory
-   at the application initialization time:
+3. If the *upload* directory doesn't exist, writing the uploaded
+   file will fail. We can solve this by creating the *upload* directory
+   at application initialization time:
 
    ```haskell
    import System.Directory (createDirectoryIfMissing)
@@ -394,10 +394,10 @@ upload a picture. Follow the steps to add a file upload handler.
        liftIO $ createDirectoryIfMissing True "upload"
    ```
 
-   Don't forget to add *directory* library dependency in Cabal config.
+   Don't forget to add the *directory* library dependency in Cabal config.
 
-4. Next thing we need is an HTML file upload form. Create an empty HTML
-   file anywhere in your local file system and paste the following HTML:
+4. The next thing we need is an HTML file upload form. Create an empty HTML
+   file anywhere in your local file system and paste the following HTML into it:
 
    ```html
    <html>
@@ -413,29 +413,29 @@ upload a picture. Follow the steps to add a file upload handler.
    </html>
    ```
 
-   This will be the HTML form which we will use through the rest
+   This will be the HTML form which we will use throughout the rest
    of the project. We don't serve this file through the local http
    server but merely open the file from the local file system in
    the browser to trigger our app.
 
 5. Build & run the application. Open the HTML file in a web browser, and
    upload an image. The image should be presented to you on the following
-   screen. Also it will be stored in *upload* directory.
+   screen. Also, it will be stored in *upload* directory.
 
 
 ### Metadata store
 
-To be able to list created memes, we need to store their metadata into a
-database. To make it simple, we will use SQLite database. We need:
+To be able to list created memes, we need to store their metadata in a
+database. To make it simple, we will use the SQLite database. We need:
 * an application state to keep the database connection,
 * a record to represent the data model,
-* database schema to persist the data model,
+* a database schema to persist the data model,
 * functions to write and read database data,
-* database initialization code.
+* the database initialization code.
 
 Follow the steps:
 
-1. Create file *src/Memegen/App.hs* which will hold application state:
+1. Create the file *src/Memegen/App.hs* which will hold the application state:
 
    ```haskell
    {-# LANGUAGE FlexibleInstances #-}
@@ -495,7 +495,7 @@ Follow the steps:
    ```
 
    Stack couldn't find the module because it is not known by stackage.org.
-   We need to put it in *extra-deps* section of *stack.yaml*. Or you can run
+   We need to put it in the *extra-deps* section of *stack.yaml*. Or you can run
    Stack solver to do that for you:
 
    ```
@@ -516,8 +516,8 @@ Follow the steps:
 
    Make sure that the project builds.
 
-2. Create file *src/Memegen/Db.hs* which will hold data model,
-   and data access layer.
+2. Create the file *src/Memegen/Db.hs* which will hold the data model,
+   and the data access layer.
 
 3. Put the data model in it:
 
@@ -591,7 +591,7 @@ Follow the steps:
                         ...
    ```
 
-5. Write functions to read and write database data:
+5. Write functions to read and write the database data:
 
    ```haskell
    module Memegen.Db
@@ -654,7 +654,7 @@ Follow the steps:
    ```
 
    It works! Now that we know the application state type, let's update
-   the rest of type signatures in *Lib.hs*:
+   the remaining type signatures in *Lib.hs*:
 
    ```haskell
    -- Before
@@ -668,8 +668,8 @@ Follow the steps:
    uploadHandler :: S.Handler AppState AppState ()
    ```
 
-7. Store the meme metadata at the upload time. Hook the meme saving
-   logic inside of ```uploadHandler```:
+7. Store the meme metadata at upload time. Hook the meme saving
+   logic into ```uploadHandler```:
 
    ```haskell
    import Data.Map.Lazy ((!))
@@ -687,16 +687,16 @@ Follow the steps:
            S.writeBS imgContent
    ```
 
-   You need to add *containers* library in the application Cabal dependencies.
+   You need to add the *containers* library in the application's Cabal dependencies.
 
 
 #### List of memes
 
-We are able to store metadata in database. But we still can't consume it.
+We are able to store metadata in the database. But we still can't consume it.
 Create a new handler which will list all stored memes:
 
 1. We want to output the memes in JSON format. Enable JSON serialization for
-   ```Meme``` record in *Db.hs*:
+   the ```Meme``` record in *Db.hs*:
 
    ```haskell
    {-# LANGUAGE TemplateHaskell #-}
@@ -756,18 +756,18 @@ routes = [ ("/", S.ifTop $ S.writeBS "hello there")
          ]
 ```
 
-Done! Upload an image named *example.jpg* then go to
+Done! Upload an image named *example.jpg*, then go to
 [/image/example.jpg](http://localhost:8000/image/example.jpg) and it will
 show you the uploaded image.
 
 
 ### Image processor
 
-The next step in our Meme generator is to embed top and bottom text into the
-image. We will write a string onto the image using well known
+The next step in our Meme generator is to embed the top and bottom text into the
+image. We will write a string onto the image using the well known
 [GD library](https://libgd.github.io/pages/about.html).
 
-1. Create *src/Memegen/Img.hs* file with the following content:
+1. Create the *src/Memegen/Img.hs* file with the following content:
 
    ```haskell
    module Memegen.Img
@@ -810,7 +810,7 @@ image. We will write a string onto the image using well known
    Note that this setup works only with *JPEG* images. The GD library supports
    more formats.
 
-2. Expose ```Memegen.Img``` module and add *gd* library dependency:
+2. Expose the ```Memegen.Img``` module and add the *gd* library dependency:
 
    ```
    library
@@ -917,7 +917,7 @@ text
 * Support more than one image format.
 * Store image files under the hash of their content to properly deduplicate
   images and isolate sessions from each other.
-* This code has a lot of shortcuts to ease the understanding.
+* This code has a lot of shortcuts to ease understanding.
   Make the code production-ready!
 * Make the code follow a good code style:
   https://github.com/tibbe/haskell-style-guide/blob/master/haskell-style.md
