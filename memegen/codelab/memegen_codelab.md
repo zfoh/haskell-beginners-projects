@@ -53,6 +53,7 @@ Steps:
      ```sh
      sudo apt-get install libsqlite3-dev
      ```
+   * SQLite is already pre-installed on newer versions of Mac OS X (it is called `sqlite3`). For older versions of Mac OS X, follow the [SQLite installation instructions](http://www.tutorialspoint.com/sqlite/sqlite_installation.htm).
 
 ## New project
 
