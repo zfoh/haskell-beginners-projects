@@ -63,49 +63,44 @@ routes = [ ("/", S.ifTop $ S.writeBS "hello there")
          ]
 
 echoHandler :: S.Handler AppState AppState ()
-echoHandler = method GET doHandle
-  where
-    doHandle = do
-      param <- getParam "echoparam"
-      maybe (writeBS "must specify echo/param in URL")
-            (writeBS . (B.append "Hello ")) param
+echoHandler = do
+  Just param <- getParam "echoparam"
+  writeBS $ B.append "Hello " param
 
 listHandler :: S.Handler AppState AppState ()
-listHandler = method GET $ do
-    memes <- S.withTop db $ Db.listMemes
-    writeBS $ BL.toStrict $ encode memes
+listHandler = do
+  memes <- S.withTop db $ Db.listMemes
+  writeBS $ BL.toStrict $ encode memes
 
 uploadHandler :: S.Handler AppState AppState ()
-uploadHandler = method POST doUpload
+uploadHandler = do
+  -- Files are sent as HTTP multipart form entries.
+  files <- S.handleMultipart uploadPolicy $ \part -> do
+    content <- liftM B.concat EL.consume
+    return (part, content)
+  let (imgPart, imgContent) = head files
+  let fileName = fromJust (S.partFileName imgPart)
+
+  req <- getRequest
+  let params = rqPostParams req
+  let topText = decodeUtf8 $ head (params ! "top")
+  let bottomText = decodeUtf8 $ head (params ! "bottom")
+
+  -- Create a meme
+  memeContent <- liftIO $
+    createMeme imgContent (T.unpack topText) (T.unpack bottomText)
+  -- Store the meme metadata into DB
+  S.withTop db $ Db.saveMeme topText bottomText (decodeUtf8 fileName)
+  -- Store the image in upload directory.
+  -- writeFile operates inside IO monad. Snap handlers run inside Snap
+  -- monad, which provides an access to IO monad. We use liftIO to
+  -- execute a function inside IO monad and return to Snap monad.
+  liftIO $ B.writeFile
+    (uploadDir </> (T.unpack $ decodeUtf8 fileName)) memeContent
+
+  writeBS memeContent
+
   where
-    doUpload = do
-        -- Files are sent as HTTP multipart form entries.
-        files <- S.handleMultipart uploadPolicy $ \part -> do
-          content <- liftM B.concat EL.consume
-          return (part, content)
-        let (imgPart, imgContent) = head files
-        let fileName = fromJust (S.partFileName imgPart)
-
-        req <- getRequest
-        let params = rqPostParams req
-        let topText = decodeUtf8 $ head (params ! "top")
-        let bottomText = decodeUtf8 $ head (params ! "bottom")
-
-        -- Create a meme
-        memeContent <- liftIO $
-          createMeme imgContent (T.unpack topText) (T.unpack bottomText)
-        -- Store the meme metadata into DB
-        S.withTop db $ Db.saveMeme topText bottomText (decodeUtf8 fileName)
-        -- Store the image in upload directory.
-        -- writeFile operates inside IO monad. Snap handlers run inside Snap
-        -- monad, which provides an access to IO monad. We use liftIO to
-        -- execute a function inside IO monad and return to Snap monad.
-        liftIO $ B.writeFile
-          (uploadDir </> (T.unpack $ decodeUtf8 fileName)) memeContent
-
-        writeBS memeContent
-
-        where
-          uploadPolicy :: S.UploadPolicy
-          uploadPolicy =
-            S.setMaximumFormInputSize (maxFileSize) S.defaultUploadPolicy
+    uploadPolicy :: S.UploadPolicy
+    uploadPolicy =
+      S.setMaximumFormInputSize (maxFileSize) S.defaultUploadPolicy

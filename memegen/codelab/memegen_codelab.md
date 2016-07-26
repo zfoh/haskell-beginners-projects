@@ -102,8 +102,8 @@ someFunc
 The logic behind this is contained in: *src/Lib.hs*. Check it out.
 
 A few more useful Stack commands:
-* Load your module inside of Haskell REPL: ```stack ghci```
-* Run tests: ```stack test```
+* Load your module inside of Haskell REPL: `stack ghci`
+* Run tests: `stack test`
 
 Pretty awesome! For self-study, see the following guide:
 http://docs.haskellstack.org/en/stable/GUIDE/. To learn more about Cabal and
@@ -210,8 +210,15 @@ appInit = S.makeSnaplet "memegen" "Meme generator." Nothing $ do
     S.addRoutes []
 ```
 
-Try to build the application by running ```stack build```. It will fail.
-The ```snap``` dependency is missing. Open the Cabal configuration and add the
+The initialization step sets up the application state. The main purpose of Snap
+monad is state management (setting up the state, accessing and mutating it). A
+state can be a database connection, access control list, backend URI, etc.  The
+only state here is an empty URL mapping. That is why we have left the type
+generic. Later, when we define the application state, we will be able to put a
+concrete type signature.
+
+Try to build the application by running `stack build`. It will fail.
+The `snap` dependency is missing. Open the Cabal configuration and add the
 library dependency:
 
 ```
@@ -224,13 +231,13 @@ library
 
 To make the code compile successfully, we still need to make two changes:
 
-* Add the *OverloadedStrings* syntax extension. It is required by ```makeSnaplet```
-  as it actually takes ```Text``` and not ```String```. By enabling the
+* Add the *OverloadedStrings* syntax extension. It is required by `makeSnaplet`
+  as it actually takes `Text` and not `String`. By enabling the
   *OverloadedStrings* syntax extension we make this conversion automatic
-  (we make string literals polymorphic over the ```IsString``` class).
-  Add ```{-# LANGUAGE OverloadedStrings #-}``` on top of *Lib.hs*.
-* Change the *app/Main.hs* import from ```Lib``` to ```Memegen.Lib```.
-* Change *app/Main.hs* to call ```memegenEntry``` instead of ```someFunc```.
+  (we make string literals polymorphic over the `IsString` class).
+  Add `{-# LANGUAGE OverloadedStrings #-}` on top of *Lib.hs*.
+* Change the *app/Main.hs* import from `Lib` to `Memegen.Lib`.
+* Change *app/Main.hs* to call `memegenEntry` instead of `someFunc`.
 
 If you got everything correctly, your *Lib.hs* will look like this:
 
@@ -283,7 +290,7 @@ routes = [ ("/", S.ifTop $ S.writeBS "hello there")
 ```
 
 We still have to:
-* Pass the routes to ```S.addRoutes```,
+* Pass the routes to `S.addRoutes`,
 
   ```haskell
   import qualified Data.ByteString as B
@@ -295,10 +302,10 @@ We still have to:
 * Add *bytestring* in the Cabal library dependency.
 
 If you build & run the application, [localhost:8000](http://localhost:8000)
-will say ```hello there```.
+will say `hello there`.
 
 Before we jump to more advanced topics, let's learn how to pass
-arguments to request handlers. Expand the routes with ```echoHandler```:
+arguments to request handlers. Expand the routes with `echoHandler`:
 
 ```haskell
 routes = [ ("/", S.ifTop $ S.writeBS "hello there")
@@ -306,16 +313,13 @@ routes = [ ("/", S.ifTop $ S.writeBS "hello there")
          ]
 
 echoHandler :: S.Handler a b ()
-echoHandler = S.method S.GET doHandle
-  where
-    doHandle = do
-      param <- S.getParam "echoparam"
-      maybe (S.writeBS "must specify echo/param in URL")
-            (S.writeBS . (B.append "Hello ")) param
+echoHandler = do
+  Just param <- getParam "echoparam"
+  writeBS $ B.append "Hello " param
 ```
 
 [/hello/haskell](http://localhost:8000/hello/haskell)
-will now say: ```Hello haskell```!
+will now say: `Hello haskell`!
 
 
 ### File upload
@@ -323,7 +327,7 @@ will now say: ```Hello haskell```!
 We have a working web application. To create a meme, we need to be able to
 upload a picture. Follow the steps to add a file upload handler.
 
-1. Extend the routes with a file upload handler mapped to ```/upload```:
+1. Extend the routes with a file upload handler mapped to `/upload`:
 
    ```haskell
    routes :: [(B.ByteString, S.Handler a b ())]
@@ -345,31 +349,29 @@ upload a picture. Follow the steps to add a file upload handler.
    import           Data.Maybe (fromJust)
 
    uploadHandler :: S.Handler a b ()
-   uploadHandler = S.method S.POST doUpload
+   uploadHandler = do
+     -- Files are sent as HTTP multipart form entries.
+     files <- S.handleMultipart uploadPolicy $ \part -> do
+       content <- liftM B.concat EL.consume
+       return (part, content)
+     let (imgPart, imgContent) = head files
+     let fileName = fromJust (S.partFileName imgPart)
+
+     -- Store the image in upload directory.
+     -- writeFile operates inside IO monad. Snap handlers run inside Snap
+     -- monad, which provides an access to IO monad. We use liftIO to
+     -- execute a function inside IO monad and return to Snap monad.
+     liftIO $ B.writeFile
+       ("upload" </> (T.unpack $ decodeUtf8 fileName)) imgContent
+
+     -- Show the uploaded image.
+     S.writeBS imgContent
+
      where
-       doUpload = do
-           -- Files are sent as HTTP multipart form entries.
-           files <- S.handleMultipart uploadPolicy $ \part -> do
-             content <- liftM B.concat EL.consume
-             return (part, content)
-           let (imgPart, imgContent) = head files
-           let fileName = fromJust (S.partFileName imgPart)
-
-           -- Store the image in upload directory.
-           -- writeFile operates inside IO monad. Snap handlers run inside Snap
-           -- monad, which provides an access to IO monad. We use liftIO to
-           -- execute a function inside IO monad and return to Snap monad.
-           liftIO $ B.writeFile
-             ("upload" </> (T.unpack $ decodeUtf8 fileName)) imgContent
-
-           -- Show the uploaded image.
-           S.writeBS imgContent
-
-           where
-             uploadPolicy :: S.UploadPolicy
-             uploadPolicy =
-               -- 2^24 is the maximum allowed upload file size (16MiB)
-               S.setMaximumFormInputSize (2^(24::Int)) S.defaultUploadPolicy
+       uploadPolicy :: S.UploadPolicy
+       uploadPolicy =
+         -- 2^24 is the maximum allowed upload file size (16MiB)
+         S.setMaximumFormInputSize (2^(24::Int)) S.defaultUploadPolicy
    ```
 
    Add its Cabal dependencies:
@@ -578,7 +580,7 @@ Follow the steps:
                     \image_filepath TEXT)")
    ```
 
-   Expose the ```Memegen.Db``` module and add *sqlite-simple* as a Cabal dependency:
+   Expose the `Memegen.Db` module and add *sqlite-simple* as a Cabal dependency:
 
    ```
    library
@@ -618,8 +620,8 @@ Follow the steps:
    ```
 
    Notice that we now know type of our application in-memory state. It is
-   ```AppState``` from *App.hs*. That is why we explicitly wrote it in
-   ```saveMeme``` and ```listMemes``` type signatures.
+   `AppState` from *App.hs*. That is why we explicitly wrote it in
+   `saveMeme` and `listMemes` type signatures.
 
 6. Initialize the database in *Lib.hs*:
 
@@ -669,22 +671,20 @@ Follow the steps:
    ```
 
 7. Store the meme metadata at upload time. Hook the meme saving
-   logic into ```uploadHandler```:
+   logic into `uploadHandler`:
 
    ```haskell
    import Data.Map.Lazy ((!))
 
-   uploadHandler = S.method S.POST doUpload
-     where
-       doUpload = do
-           ...
-           req <- S.getRequest
-           let params = S.rqPostParams req
-           let topText = decodeUtf8 $ head (params ! "top")
-           let bottomText = decodeUtf8 $ head (params ! "bottom")
-           S.withTop db $ Db.saveMeme topText bottomText (decodeUtf8 fileName)
-           ...
-           S.writeBS imgContent
+   uploadHandler = do
+     ...
+     req <- S.getRequest
+     let params = S.rqPostParams req
+     let topText = decodeUtf8 $ head (params ! "top")
+     let bottomText = decodeUtf8 $ head (params ! "bottom")
+     S.withTop db $ Db.saveMeme topText bottomText (decodeUtf8 fileName)
+     ...
+     S.writeBS imgContent
    ```
 
    You need to add the *containers* library in the application's Cabal dependencies.
@@ -696,7 +696,7 @@ We are able to store metadata in the database. But we still can't consume it.
 Create a new handler which will list all stored memes:
 
 1. We want to output the memes in JSON format. Enable JSON serialization for
-   the ```Meme``` record in *Db.hs*:
+   the `Meme` record in *Db.hs*:
 
    ```haskell
    {-# LANGUAGE TemplateHaskell #-}
@@ -708,7 +708,7 @@ Create a new handler which will list all stored memes:
    ```
 
    This is TemplateHaskell-heavy code. It will generate the code required
-   to serialize ```Meme``` record to JSON format.
+   to serialize `Meme` record to JSON format.
 
    We are using Aeson library. Add *aeson* dependency in the Cabal config.
 
@@ -729,9 +729,9 @@ Create a new handler which will list all stored memes:
    import           Data.Aeson (encode)
 
    listHandler :: S.Handler AppState AppState ()
-   listHandler = S.method S.GET $ do
-       memes <- S.withTop db $ Db.listMemes
-       S.writeBS $ BL.toStrict $ encode memes
+   listHandler = do
+     memes <- S.withTop db $ Db.listMemes
+     S.writeBS $ BL.toStrict $ encode memes
    ```
 
 Upload a file using the existing HTML form. Then go to
@@ -810,7 +810,7 @@ image. We will write a string onto the image using the well known
    Note that this setup works only with *JPEG* images. The GD library supports
    more formats.
 
-2. Expose the ```Memegen.Img``` module and add the *gd* library dependency:
+2. Expose the `Memegen.Img` module and add the *gd* library dependency:
 
    ```
    library
@@ -824,52 +824,48 @@ image. We will write a string onto the image using the well known
                         ...
    ```
 
-3. Hook up ```createMeme``` in the upload request handler:
+3. Hook up `createMeme` in the upload request handler:
 
    ```haskell
    import Memegen.Img (createMeme)
 
-   uploadHandler = S.method S.POST doUpload
-     where
-       doUpload = do
-           ...
-           memeContent <- liftIO $
-             createMeme imgContent (T.unpack topText) (T.unpack bottomText)
+   uploadHandler = do
+     ...
+     memeContent <- liftIO $
+       createMeme imgContent (T.unpack topText) (T.unpack bottomText)
 
-           S.writeBS memeContent
+     S.writeBS memeContent
    ```
 
    The final, complete, upload handler:
 
    ```haskell
    uploadHandler :: S.Handler AppState AppState ()
-   uploadHandler = S.method S.POST doUpload
+   uploadHandler = do
+     files <- S.handleMultipart uploadPolicy $ \part -> do
+       content <- liftM B.concat EL.consume
+       return (part, content)
+     let (imgPart, imgContent) = head files
+     let fileName = fromJust (S.partFileName imgPart)
+
+     req <- S.getRequest
+     let params = S.rqPostParams req
+     let topText = decodeUtf8 $ head (params ! "top")
+     let bottomText = decodeUtf8 $ head (params ! "bottom")
+     S.withTop db $ Db.saveMeme topText bottomText (decodeUtf8 fileName)
+
+     memeContent <- liftIO $
+       createMeme imgContent (T.unpack topText) (T.unpack bottomText)
+
+     liftIO $ B.writeFile
+       ("upload" </> (T.unpack $ decodeUtf8 fileName)) memeContent
+
+     S.writeBS memeContent
+
      where
-       doUpload = do
-           files <- S.handleMultipart uploadPolicy $ \part -> do
-             content <- liftM B.concat EL.consume
-             return (part, content)
-           let (imgPart, imgContent) = head files
-           let fileName = fromJust (S.partFileName imgPart)
-
-           req <- S.getRequest
-           let params = S.rqPostParams req
-           let topText = decodeUtf8 $ head (params ! "top")
-           let bottomText = decodeUtf8 $ head (params ! "bottom")
-           S.withTop db $ Db.saveMeme topText bottomText (decodeUtf8 fileName)
-
-           memeContent <- liftIO $
-             createMeme imgContent (T.unpack topText) (T.unpack bottomText)
-
-           liftIO $ B.writeFile
-             ("upload" </> (T.unpack $ decodeUtf8 fileName)) memeContent
-
-           S.writeBS memeContent
-
-           where
-             uploadPolicy :: S.UploadPolicy
-             uploadPolicy =
-               S.setMaximumFormInputSize (2^(24::Int)) S.defaultUploadPolicy
+       uploadPolicy :: S.UploadPolicy
+       uploadPolicy =
+         S.setMaximumFormInputSize (2^(24::Int)) S.defaultUploadPolicy
 
    ```
 
