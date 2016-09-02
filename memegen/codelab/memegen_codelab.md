@@ -314,8 +314,8 @@ routes = [ ("/", S.ifTop $ S.writeBS "hello there")
 
 echoHandler :: S.Handler a b ()
 echoHandler = do
-  Just param <- getParam "echoparam"
-  writeBS $ B.append "Hello " param
+  Just param <- S.getParam "echoparam"
+  S.writeBS $ B.append "Hello " param
 ```
 
 [/hello/haskell](http://localhost:8000/hello/haskell)
