@@ -17,7 +17,6 @@ import           System.Environment      (getArgs)
 import           System.Exit             (exitFailure)
 import           System.IO               (hPutStrLn, stderr)
 import           WebWatch.GetLinks
-import           WebWatch.Mailer
 import qualified WebWatch.Slack          as Slack
 
 data Config = Config
@@ -71,11 +70,6 @@ watchOnce = do
     newLinks <- state (addLinks links)
     slog $ "Got " ++ show (length links) ++ " links, " ++
         show (length newLinks) ++ " new"
-
-    unless (null newLinks) $ do
-        slog $ "Sending mail from " ++ T.unpack cMailFrom ++
-                " to " ++ T.unpack cMailTo
-        catchExceptions () $ sendLinks cMailFrom cMailTo newLinks
 
     unless (null newLinks) $ do
         slog $ "Sending slack message..."

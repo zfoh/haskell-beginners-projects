@@ -54,7 +54,7 @@ getMatchingLinks
     -> IO [Link]
 getMatchingLinks patterns uri = do
     manager <- Http.newManager Http.tlsManagerSettings
-    req     <- Http.parseUrl (T.unpack uri)
+    req     <- Http.parseRequest (T.unpack uri)
     lbs     <- Http.responseBody <$> Http.httpLbs req manager
     return $
         makeAbsolute uri $
