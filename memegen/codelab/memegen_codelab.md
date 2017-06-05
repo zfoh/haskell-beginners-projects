@@ -338,18 +338,19 @@ upload a picture. Follow the steps to add a file upload handler.
 
    ```haskell
    import qualified Snap.Util.FileUploads as S
-   import qualified Data.Enumerator.List as EL
    import qualified Data.Text as T
+   import qualified System.IO.Streams as IOS
+   import qualified System.IO.Streams.ByteString as IOSB
    import           Data.Text.Encoding (decodeUtf8)
    import           Control.Monad.State (liftM, liftIO)
    import           System.FilePath ((</>))
-   import           Data.Maybe (fromJust)
+   import           Data.Maybe (fromJust, fromMaybe)
 
    uploadHandler :: S.Handler a b ()
    uploadHandler = do
      -- Files are sent as HTTP multipart form entries.
-     files <- S.handleMultipart uploadPolicy $ \part -> do
-       content <- liftM B.concat EL.consume
+     files <- S.handleMultipart uploadPolicy $ \part istream -> do
+       content <- fmap (fromMaybe B.empty) $ IOSB.takeBytes maxFileSize istream >>= IOS.read
        return (part, content)
      let (imgPart, imgContent) = head files
      let fileName = fromJust (S.partFileName imgPart)
@@ -478,44 +479,36 @@ Follow the steps:
    If you try to build the application, you will get the following error:
 
    ```
-   While constructing the BuildPlan the following exceptions were encountered:
+   Error: While constructing the build plan, the following exceptions were encountered:
 
-   --  Failure when adding dependencies:
-         snaplet-sqlite-simple: needed (-any), stack configuration has no specified version (latest applicable is 0.4.8.3)
-       needed for package memegen-0.1.0.0
+   In the dependencies for memegen-0.1.0.0:
+       snap must match -any, but the stack configuration has no specified version (latest applicable is 1.0.0.1)
+       snaplet-sqlite-simple must match -any, but the stack configuration has no specified version
+                             (latest applicable is 1.0.0.2)
 
-   --  While attempting to add dependency,
-       Could not find package snaplet-sqlite-simple in known packages
-
-   Recommended action: try adding the following to your extra-deps in memegen/stack.yaml
-   - snaplet-sqlite-simple-0.4.8.3
+   Recommended action: try adding the following to your extra-deps in memegen/stack.yaml:
+   - snap-1.0.0.1
+   - snaplet-sqlite-simple-1.0.0.2
 
    You may also want to try the 'stack solver' command
+   Plan construction failed.
    ```
 
    Stack couldn't find the module because it is not known by stackage.org.
-   We need to put it in the *extra-deps* section of *stack.yaml*. Or you can run
-   Stack solver to do that for you. Note that `stack solver` requires the `cabal`
-   binary, which we need to install first:
-
-   ```
-   stack install cabal-install
-   stack solver --update-config
-   ```
-
-   *Stack.yaml* is changed to:
+   We need to put it in the *extra-deps* section of *stack.yaml*. After adding
+   the suggestions (after two rounds) *stack.yaml* will look like:
    ```yaml
    flags: {}
    extra-package-dbs: []
    packages:
    - '.'
    extra-deps:
-   - aeson-0.9.0.1
-   - snaplet-sqlite-simple-0.4.8.3
-   resolver: lts-6.7
+   - snaplet-sqlite-simple-1.0.0.2
+   - snap-1.0.0.1
+   - heist-1.0.1.0
+   - map-syntax-0.2.0.2
+   resolver: lts-8.17
    ```
-
-   Make sure that the project builds.
 
 2. Create the file *src/Memegen/Db.hs* which will hold the data model,
    and the data access layer.
@@ -841,8 +834,8 @@ image. We will write a string onto the image using the well known
    ```haskell
    uploadHandler :: S.Handler AppState AppState ()
    uploadHandler = do
-     files <- S.handleMultipart uploadPolicy $ \part -> do
-       content <- liftM B.concat EL.consume
+     files <- S.handleMultipart uploadPolicy $ \part istream -> do
+       content <- fmap (fromMaybe B.empty) $ IOSB.takeBytes maxFileSize istream >>= IOS.read
        return (part, content)
      let (imgPart, imgContent) = head files
      let fileName = fromJust (S.partFileName imgPart)
@@ -891,7 +884,6 @@ aeson
 bytestring
 containers
 directory
-enumerator
 filepath
 gd
 lens
@@ -902,6 +894,7 @@ snaplet-sqlite-simple
 snap-server
 sqlite-simple
 text
+io-streams
 ```
 
 
