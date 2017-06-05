@@ -19,7 +19,7 @@ sendLinks
     -> IO ()
 sendLinks from to links = do
     lgr <- Aws.newLogger Aws.Error stderr
-    env <- Aws.newEnv Aws.NorthVirginia Aws.Discover
+    env <- Aws.newEnv Aws.Discover
     Aws.runResourceT $ Aws.runAWS (env & Aws.envLogger .~ lgr) $ do
         _ <- Aws.send $ Aws.Ses.sendEmail
             from
