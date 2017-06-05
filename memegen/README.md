@@ -18,7 +18,7 @@ This is a demo beginners project for ZuriHac 2016. See the
 - enumerator (A low-level streaming library)
 - filepath (Manipulating filepaths)
 - gd (This is an image manipulation library)
-- lens (Lens is, amongst other things, a utility library for modifying Haskell values)
+- lens (Lens is, amongst other things, a utility library for modifying Haskell records)
 - mtl (The standard monad libraries)
 - snap (The web framework we will use)
 - snap-core (Core part of the web framework)
