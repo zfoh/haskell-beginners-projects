@@ -10,23 +10,23 @@ import           Control.Monad.State (liftM, liftIO)
 import           Data.Aeson (encode)
 import           Data.Int (Int64(..))
 import           Data.Map.Lazy ((!))
-import           Data.Maybe (fromJust)
+import           Data.Maybe (fromJust, fromMaybe)
 import           Data.Text.Encoding (decodeUtf8)
 import           Memegen.App (AppState(..), db)
 import           Memegen.Img (createMeme)
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy as BL
-import qualified Data.Enumerator.List as EL
 import qualified Data.Text as T
 import qualified Memegen.Db as Db
 import qualified Snap as S
 import qualified Snap.Snaplet.SqliteSimple as S
 import qualified Snap.Util.FileServe as S
 import qualified Snap.Util.FileUploads as S
+import qualified System.IO.Streams as IOS
+import qualified System.IO.Streams.ByteString as IOSB
 import           Snap.Core (Method(..), rqPostParams, getRequest, writeBS, getParam, method)
 import           System.Directory (createDirectoryIfMissing)
 import           System.FilePath ((</>))
-
 
 uploadDir :: String
 uploadDir = "upload"
@@ -75,8 +75,8 @@ listHandler = do
 uploadHandler :: S.Handler AppState AppState ()
 uploadHandler = do
   -- Files are sent as HTTP multipart form entries.
-  files <- S.handleMultipart uploadPolicy $ \part -> do
-    content <- liftM B.concat EL.consume
+  files <- S.handleMultipart uploadPolicy $ \part istream -> do
+    content <- fmap (fromMaybe B.empty) $ IOSB.takeBytes maxFileSize istream >>= IOS.read
     return (part, content)
   let (imgPart, imgContent) = head files
   let fileName = fromJust (S.partFileName imgPart)

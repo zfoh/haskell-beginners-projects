@@ -24,7 +24,6 @@ library
                      , bytestring
                      , containers
                      , directory
-                     , enumerator
                      , filepath
                      , gd
                      , lens
@@ -35,6 +34,7 @@ library
                      , snap-server
                      , sqlite-simple
                      , text
+                     , io-streams
   default-language:    Haskell2010
 
 executable memegen-exe
