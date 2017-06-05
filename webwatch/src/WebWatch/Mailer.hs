@@ -43,7 +43,7 @@ mkBody
     :: [Link]
     -> T.Text
 mkBody links = T.unlines $
-    [ "Hey brozinsky!"
+    [ "Hey friend!"
     , ""
     , "We found a few links matching your query."
     , ""
