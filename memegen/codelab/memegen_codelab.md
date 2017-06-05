@@ -21,17 +21,13 @@ Let's start!
 ## Development environment
 
 For this project, we will need:
-* Haskell compiler and corresponding tools (Cabal, Stack, etc.),
-* [GD library](https://github.com/libgd/libgd)
+* [Stack](http://haskellstack.org/) The Haskell Tool Stack
+* [GD library](https://github.com/libgd/libgd) GD Graphics Library
 * [SQLite](https://www.sqlite.org/) database
 
 Steps:
 
-1. Install Haskell compiler & tools: https://www.haskell.org/downloads#platform
-   * If you are using Ubuntu Linux, choose "Generic". A distribution specific
-     package might be outdated (e.g., on Ubuntu, Stack is not included).
-   * If you only miss Stack, get it from here:
-     http://docs.haskellstack.org/en/stable/README/
+1. Install Stack: http://haskellstack.org/
    * *Windows:* If you get certificate error when running Stack, open Internet
      Explorer and visit the following pages (note the *https* protocol):
 
@@ -60,7 +56,7 @@ Steps:
 Create a new project using Stack:
 
 ```
-stack new memegen
+stack new memegen --resolver=lts-5.18
 cd memegen
 ```
 
@@ -119,11 +115,13 @@ work well for console-based development is
 auto-reloading GHCi daemon. It is set up as follows.
 
 
-1. Install `ghcid` using `stack install ghcid` and make sure the reported
-   install path is on your PATH.
+1. Install `ghcid` using `stack install ghcid`. This will install `ghcid` into
+   the local bin path (see `stack path --local-bin`). `stack exec` will
+   automatically pick up any binary that is in that folder, so that you don't
+   have to edit your `PATH` environment variable.
 2. Let's have a look at its help output.
    ```
-   > ghcid --help
+   > stack exec ghcid -- --help
    Auto reloading GHCi daemon v0.6.4
 
    ghcid [OPTIONS] [MODULE]
@@ -152,21 +150,20 @@ auto-reloading GHCi daemon. It is set up as follows.
 3. Run `ghcid` with the following flags.
 
    ```
-   ghcid -c'stack ghci --main-is=memegen:memegen-exe'
+   stack exec ghcid -- -c'stack ghci --main-is=memegen:memegen-exe'
    ```
 
    This instructs `ghcid` to start a GHCi session with all the modules
    necessary to build `memegen-exe` in the `memegen` .cabal file.
 
 4. Insert an error in the `Lib.hs` file and observe how it is reported by
-   `ghcid`. Note that this exploits the built-in support for `stack` in
-   `ghcid-0.6.4`.
+   `ghcid`.
 
 5. You can also auto-reload the `main` function of `memegen-exe` using the
    `--test` flag of `ghcid` as follows.
 
    ```
-   ghcid -c'stack ghci --main-is=memegen:memegen-exe' --test='main'
+   stack exec ghcid -- -c'stack ghci --main-is=memegen:memegen-exe' --test='main'
    ```
 
    This is super handy to auto-recompile and load your `memegen` server on
@@ -498,9 +495,11 @@ Follow the steps:
 
    Stack couldn't find the module because it is not known by stackage.org.
    We need to put it in the *extra-deps* section of *stack.yaml*. Or you can run
-   Stack solver to do that for you:
+   Stack solver to do that for you. Note that `stack solver` requires the `cabal`
+   binary, which we need to install first:
 
    ```
+   stack install cabal-install
    stack solver --update-config
    ```
 
