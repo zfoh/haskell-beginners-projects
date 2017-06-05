@@ -3,8 +3,8 @@
 module Main where
 
 import           Control.Concurrent      (threadDelay)
-import           Control.Exception       (AsyncException,
-                                          fromException, try, throwIO)
+import           Control.Exception       (AsyncException, fromException,
+                                          throwIO, try)
 import           Control.Monad           (forever, unless)
 import           Control.Monad.Reader    (ReaderT, ask, runReaderT)
 import           Control.Monad.State     (StateT, evalStateT, state)
@@ -18,22 +18,25 @@ import           System.Exit             (exitFailure)
 import           System.IO               (hPutStrLn, stderr)
 import           WebWatch.GetLinks
 import           WebWatch.Mailer
+import qualified WebWatch.Slack          as Slack
 
 data Config = Config
-    { cPatterns :: [T.Text]
-    , cUrl      :: !T.Text
-    , cInterval :: !Int
-    , cMailFrom :: !T.Text
-    , cMailTo   :: !T.Text
+    { cPatterns        :: [T.Text]
+    , cUrl             :: !T.Text
+    , cInterval        :: !Int
+    , cMailFrom        :: !T.Text
+    , cMailTo          :: !T.Text
+    , cSlackWebhookUrl :: !T.Text
     } deriving (Show)
 
 parseConfig :: C.Config -> IO Config
 parseConfig conf = do
-    cPatterns <- C.require conf "patterns"
-    cUrl      <- C.require conf "url"
-    cInterval <- C.require conf "interval"
-    cMailFrom <- C.require conf "mail.from"
-    cMailTo   <- C.require conf "mail.to"
+    cPatterns        <- C.require conf "patterns"
+    cUrl             <- C.require conf "url"
+    cInterval        <- C.require conf "interval"
+    cMailFrom        <- C.require conf "mail.from"
+    cMailTo          <- C.require conf "mail.to"
+    cSlackWebhookUrl <- C.require conf "slack.webhook_url"
     return Config {..}
 
 type LinkSet = HS.HashSet T.Text
@@ -73,6 +76,10 @@ watchOnce = do
         slog $ "Sending mail from " ++ T.unpack cMailFrom ++
                 " to " ++ T.unpack cMailTo
         catchExceptions () $ sendLinks cMailFrom cMailTo newLinks
+
+    unless (null newLinks) $ do
+        slog $ "Sending slack message..."
+        catchExceptions () $ Slack.sendLinks cSlackWebhookUrl newLinks
 
     slog $ "Sleeping " ++ show cInterval ++ " minute(s)"
     liftIO $ threadDelay (cInterval * 60 * 1000 * 1000)

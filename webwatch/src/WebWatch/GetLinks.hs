@@ -10,8 +10,8 @@ import           Data.Maybe              (mapMaybe)
 import qualified Data.Text               as T
 import qualified Data.Text.Lazy          as TL
 import qualified Data.Text.Lazy.Encoding as TL
-import qualified Network.HTTP.Conduit    as Http (parseUrl)
-import qualified Network.HTTP.Simple     as Http
+import qualified Network.HTTP.Client     as Http
+import qualified Network.HTTP.Client.TLS as Http
 import qualified Network.URI             as Uri
 import qualified Text.HTML.TagSoup       as TagSoup
 
@@ -53,8 +53,9 @@ getMatchingLinks
     -> T.Text
     -> IO [Link]
 getMatchingLinks patterns uri = do
-    req <- Http.parseUrl (T.unpack uri)
-    lbs <- Http.getResponseBody <$> Http.httpLbs req
+    manager <- Http.newManager Http.tlsManagerSettings
+    req     <- Http.parseUrl (T.unpack uri)
+    lbs     <- Http.responseBody <$> Http.httpLbs req manager
     return $
         makeAbsolute uri $
         matchingLinks patterns $

@@ -20,13 +20,16 @@ Executable webwatch
   Other-modules:
     WebWatch.GetLinks
     WebWatch.Mailer
+    WebWatch.Slack
 
   Build-depends:
-      amazonka
+      aeson
+    , amazonka
     , amazonka-ses
     , base
     , configurator
-    , http-conduit
+    , http-client
+    , http-client-tls
     , lens
     , mtl
     , network-uri
