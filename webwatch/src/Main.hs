@@ -23,8 +23,6 @@ data Config = Config
     { cPatterns        :: [T.Text]
     , cUrl             :: !T.Text
     , cInterval        :: !Int
-    , cMailFrom        :: !T.Text
-    , cMailTo          :: !T.Text
     , cSlackWebhookUrl :: !T.Text
     } deriving (Show)
 
@@ -33,8 +31,6 @@ parseConfig conf = do
     cPatterns        <- C.require conf "patterns"
     cUrl             <- C.require conf "url"
     cInterval        <- C.require conf "interval"
-    cMailFrom        <- C.require conf "mail.from"
-    cMailTo          <- C.require conf "mail.to"
     cSlackWebhookUrl <- C.require conf "slack.webhook_url"
     return Config {..}
 

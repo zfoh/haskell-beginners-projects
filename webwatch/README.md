@@ -24,8 +24,3 @@ My implementation uses the following libraries:
 - `tagsoup` for parsing the web page and getting out the links
 - `network-uri` to deal with relative/absolute URIs
 - `configurator` to read the configuration file
-
-## Deployment
-
-I compile a statically linked binary on Linux and dropped that on an EC2
-instance.
