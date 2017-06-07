@@ -1,4 +1,4 @@
--- | This module contains code for sending notification mails.
+-- | This module contains code for sending messages to the Slack channel.
 {-# LANGUAGE OverloadedStrings #-}
 module WebWatch.Slack
     ( sendLinks

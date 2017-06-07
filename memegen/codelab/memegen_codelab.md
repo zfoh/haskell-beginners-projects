@@ -1,4 +1,4 @@
-#### ZuriHac 2016 Beginner Track Exercise
+#### ZuriHac Beginner Track Exercise
 # Web meme generator
 
 **Description:** A web application for creating [memes](https://en.wikipedia.org/wiki/Internet_meme) from pictures:
@@ -12,8 +12,7 @@
 * How to build a small, real-world web application in Haskell (no HTML or CSS
   knowledge (or work) required).
 
-**NOTE:** Instructions are tested on Ubuntu Linux 16.04, OS X. For help with
-Microsoft Windows, please email ivan.kristo@gmail.com.
+**NOTE:** Instructions are tested on Ubuntu Linux 16.04 and OS X.
 
 Let's start!
 
