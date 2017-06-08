@@ -187,6 +187,9 @@ Got a config file:
 Config {cPatterns = ["google","haskell","microsoft","apple"], cUrl = "http://news.ycombinator.com/", cInterval = 5, cSlackWebhookUrl = "https://hooks.slack.com/services/TTTTTTTTT/CCCCCCCCC/XXXXXXXXXXXXXXXXXXXXXXXX"}
 ```
 
+Contact us at the Hackathon to obtain the real "secret" `hooks.slack.com/...`
+URL for `zurihac2017.slack.com`.
+
 ## Keeping state across checks
 
 We need to remember which links we've already seen and which ones are new, so that we
@@ -588,6 +591,9 @@ Now that we have found the interesting articles, we should send them to the
 Slack. Consuming REST API means sending HTTP POST request. For that we'll use
 `http-client` and `http-client-tls` packages. Add them to the project's cabal
 file.
+
+More information on the part of the Slack API we will use can be found
+[here](https://api.slack.com/incoming-webhooks).
 
 Create the file `src/WebWatch/Slack.hs`:
 
