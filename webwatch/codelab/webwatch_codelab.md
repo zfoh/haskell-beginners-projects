@@ -1,14 +1,15 @@
-#### ZuriHac 2017 Beginner Track Exercise
+#### ZuriHac Beginner Track Exercise
 
-**Description:** A command-line tool which watches a certain webpage
-for links with keywords (e.g. search http://news.ycombinator.com for "Haskell").
-When such a link is found, it sends you an email.
+**Description:** A command-line tool which watches a certain webpage for links
+with keywords (e.g. search http://news.ycombinator.com for "Haskell"). When
+such a link is found, it sends a message to the [Slack](https://slack.com/)
+channel.
 
 **Learning goals:**
 * How to write a basic command-line application
 * How to load configuration from a config-file
 * How to fetch and parse a HTML page
-* How to use AWS SES to send emails
+* How to write HTTP client for REST API
 * How to use the Reader/State monad transformers
 
 Let's start!
@@ -16,7 +17,9 @@ Let's start!
 
 ## Development environment
 
-The only tool you need to build this project is [Stack](http://haskellstack.org/) – The Haskell Tool Stack. Follow the install instructions on its homepage.
+The only tool you need to build this project is
+[Stack](http://haskellstack.org/) – The Haskell Tool Stack. Follow the install
+instructions on its homepage.
 
 ## New project
 
@@ -94,20 +97,18 @@ import           System.Environment      (getArgs)
 import           System.Exit             (exitFailure)
 
 data Config = Config
-    { cPatterns :: [T.Text]
-    , cUrl      :: !T.Text
-    , cInterval :: !Int
-    , cMailFrom :: !T.Text
-    , cMailTo   :: !T.Text
+    { cPatterns        :: [T.Text]
+    , cUrl             :: !T.Text
+    , cInterval        :: !Int
+    , cSlackWebhookUrl :: !T.Text
     } deriving (Show)
 
 parseConfig :: C.Config -> IO Config
 parseConfig conf = do
-    cPatterns <- C.require conf "patterns"
-    cUrl      <- C.require conf "url"
-    cInterval <- C.require conf "interval"
-    cMailFrom <- C.require conf "mail.from"
-    cMailTo   <- C.require conf "mail.to"
+    cPatterns        <- C.require conf "patterns"
+    cUrl             <- C.require conf "url"
+    cInterval        <- C.require conf "interval"
+    cSlackWebhookUrl <- C.require conf "slack.webhook_url"
     return Config {..}
 
 
@@ -170,12 +171,11 @@ We need to give it one argument – the config file to load. Let's create `webw
 and fill it with some sensible thinks to watch.
 
 ```
-url = "http://news.ycombinator.com/newest"
+url = "http://news.ycombinator.com/"
 patterns = ["google", "haskell", "microsoft", "apple"]
 interval = 5
-mail {
-    from = "webwatch@zurihac.info"
-    to = "jaspervdj@gmail.com"
+slack {
+    webhook_url = "https://hooks.slack.com/services/TTTTTTTTT/CCCCCCCCC/XXXXXXXXXXXXXXXXXXXXXXXX"
 }
 ```
 
@@ -184,7 +184,7 @@ Now we can see if we can load this file:
 ```
 $ stack exec webwatch -- webwatch.conf
 Got a config file:
-Config {cPatterns = ["google","haskell","microsoft","apple"], cUrl = "http://news.ycombinator.com/newest", cInterval = 5, cMailFrom = "webwatch@zurihac.info", cMailTo = "jaspervdj@gmail.com"}
+Config {cPatterns = ["google","haskell","microsoft","apple"], cUrl = "http://news.ycombinator.com/", cInterval = 5, cSlackWebhookUrl = "https://hooks.slack.com/services/TTTTTTTTT/CCCCCCCCC/XXXXXXXXXXXXXXXXXXXXXXXX"}
 ```
 
 ## Keeping state across checks
@@ -267,10 +267,10 @@ You can exit ghci by pressing CTRL-D or writing `:q` followed by the enter key.
 
 ## The main watch function
 
-We write the main watch function such that it fetches the links, sends
-the emails, then sleeps for some time and then it is done. It runs inside
-our `WebWatchM` monad, which gives it (read-only) access to the `Config`
-object and the ability to update the `LinkSet`.
+We write the main watch function such that it fetches the links, sends the
+message, then sleeps for some time and then it is done. It runs inside our
+`WebWatchM` monad, which gives it (read-only) access to the `Config` object and
+the ability to update the `LinkSet`.
 
 The function is aptly named `watchOnce` because it runs the checks once
 and then is done.
@@ -287,7 +287,7 @@ watchOnce = do
 
     -- TODO: Fetch the links
 
-    -- TODO: Send emails
+    -- TODO: Send message
 
     slog $ "Sleeping " ++ show cInterval ++ " minute(s)"
     liftIO $ threadDelay (cInterval * 60 * 1000 * 1000)
@@ -332,7 +332,7 @@ and then sleep for 5 minutes:
 ```
 $ stack build
 $ stack exec webwatch -- webwatch.conf
-Getting links from http://news.ycombinator.com/newest
+Getting links from http://news.ycombinator.com/
 Sleeping 5 minute(s)
 ```
 
@@ -348,7 +348,7 @@ you need to use `threadDelay (5 * 1000 * 1000)`.
 Now that we have the main loop ready, there are two parts missing:
 
  - fetching the links from the webpage
- - sending the emails
+ - sending the message
 
 Let's tackle the first one.
 
@@ -385,10 +385,10 @@ getMatchingLinks patterns uri = do
 and register it in the cabal file:
 
 ```
-executabe
+Executable webwatch
   …
 
-  other-modules:
+  Other-modules:
     WebWatch.GetLinks
 ```
 
@@ -491,7 +491,7 @@ see which links it has found:
 ```
 $ stack build
 $ stack exec webwatch -- webwatch.conf
-Getting links from http://news.ycombinator.com/newest
+Getting links from http://news.ycombinator.com/
 [Link {lTitle = "Amazon reportedly working on proper Android \8216Ice\8217 smartphones with Google\8217s apps", lHref = "https://www.theverge.com/circuitbreaker/2017/6/5/15739540/amazon-android-ice-smartphones-google-apps-services-fire-phone-report"}]
 Sleeping 5 minute(s)
 ```
@@ -563,15 +563,15 @@ watchOnce = do
 ```
 $ stack build
 $ stack exec webwatch -- webwatch.conf
-Getting links from http://news.ycombinator.com/newest
+Getting links from http://news.ycombinator.com/
 All links: [Link {lTitle = "Apple, Amazon to back Foxconn on Toshiba chip bid, Gou says", lHref = "http://asia.nikkei.com/Business/Deals/Apple-Amazon-to-back-Foxconn-on-Toshiba-chip-bid-Gou-says"}]
 New links: [Link {lTitle = "Apple, Amazon to back Foxconn on Toshiba chip bid, Gou says", lHref = "http://asia.nikkei.com/Business/Deals/Apple-Amazon-to-back-Foxconn-on-Toshiba-chip-bid-Gou-says"}]
 
-Getting links from http://news.ycombinator.com/newest
+Getting links from http://news.ycombinator.com/
 All links: [Link {lTitle = "Apple, Amazon to back Foxconn on Toshiba chip bid, Gou says", lHref = "http://asia.nikkei.com/Business/Deals/Apple-Amazon-to-back-Foxconn-on-Toshiba-chip-bid-Gou-says"}]
 New links: []
 
-Getting links from http://news.ycombinator.com/newest
+Getting links from http://news.ycombinator.com/
 All links: [Link {lTitle = "Apple, Amazon to back Foxconn on Toshiba chip bid, Gou says", lHref = "http://asia.nikkei.com/Business/Deals/Apple-Amazon-to-back-Foxconn-on-Toshiba-chip-bid-Gou-says"}]
 New links: []
 ```
@@ -581,3 +581,122 @@ That looks good, the list of all links remains the same, and the new link is con
 and thus ignored in the later iterations.
 
 
+## Sending the messages
+
+Now that we have found the interesting articles, we should send them to the
+[Slack](https://slack.com) channel. We can do that through REST API provided by
+Slack. Consuming REST API means sending HTTP POST request. For that we'll use
+`http-client` and `http-client-tls` packages. Add them to the project's cabal
+file.
+
+Create the file `src/WebWatch/Slack.hs`:
+
+```haskell
+-- | This module contains code for sending messages to the Slack channel.
+{-# LANGUAGE OverloadedStrings #-}
+module WebWatch.Slack
+    ( sendLinks
+    ) where
+
+import qualified Data.Text               as T
+import           WebWatch.GetLinks
+
+sendLinks
+    :: T.Text -- ^ Special access URL
+    -> [Link] -- ^ Links
+    -> IO ()
+sendLinks webhookUrl links = do
+    return ()
+```
+
+and register it in the cabal file:
+
+```
+Executable webwatch
+  …
+
+  Other-modules:
+    WebWatch.GetLinks
+    WebWatch.Slack
+```
+
+Now you have all that's needed to finish the `watchOnce` function:
+
+```haskell
+watchOnce = do
+    …
+
+    unless (null newLinks) $ do
+        slog $ "Sending slack message..."
+        catchExceptions () $ Slack.sendLinks cSlackWebhookUrl newLinks
+```
+
+We still have to finish the Slack client. To send data to the service, we'll
+use JSON and `aeson` library (remember to update cabal dependencies). Open
+`src/WebWatch/Slack.hs` and add: `Payload` data (message format for
+communication), its Aeson wrapper for automatic JSON serialization and
+deserialization, and the constructor `mkPayload`:
+
+```haskell
+import           Data.Aeson              ((.=))
+import qualified Data.Aeson              as Aeson
+import           Data.Monoid             ((<>))
+
+data Payload = Payload
+    { payloadText :: !T.Text
+    } deriving (Show)
+
+instance Aeson.ToJSON Payload where
+    toJSON p = Aeson.object
+        [ "text" .= payloadText p
+        ]
+
+mkPayload
+    :: [Link]
+    -> Payload
+mkPayload links = Payload
+    { payloadText = T.unlines $
+        [ "We found a few links matching your query."
+        , ""
+        ] ++
+        [ "- " <> lTitle link <> "\n  " <> lHref link
+        | link <- links
+        ]
+    }
+```
+
+The core part of Stack client is `sendLinks` method. It creates the payload out
+of the given links, build the HTTP POST requests and sends it to the Slack
+service endpoint. Let's write it:
+
+```haskell
+import qualified Network.HTTP.Client     as Http
+import qualified Network.HTTP.Client.TLS as Http
+
+sendLinks
+    :: T.Text -- ^ Special access URL
+    -> [Link] -- ^ Links
+    -> IO ()
+sendLinks webhookUrl links = do
+    -- Create payload
+    let payload = mkPayload links
+
+    -- Initialize an HTTP manager
+    manager <- Http.newManager Http.tlsManagerSettings
+
+    -- We create an initial request by parsing the URL
+    request0 <- Http.parseRequest (T.unpack webhookUrl)
+
+    -- But we need to set a few more details:
+    let request = request0
+            { Http.method      = "POST"
+            , Http.requestBody = Http.RequestBodyLBS (Aeson.encode payload)
+            }
+
+    -- We perform the request (but we can ignore the result).
+    _ <- Http.httpLbs request manager
+
+    return ()
+```
+
+That's all!
