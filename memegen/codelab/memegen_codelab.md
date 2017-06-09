@@ -55,7 +55,7 @@ Steps:
 Create a new project using Stack:
 
 ```
-stack new memegen --resolver=lts-5.18
+stack new memegen --resolver=lts-8.17
 cd memegen
 ```
 
@@ -225,7 +225,7 @@ library
                      , snap
 ```
 
-To make the code compile successfully, we still need to make two changes:
+To make the code compile successfully, we still need to make a couple of changes:
 
 * Add the *OverloadedStrings* syntax extension. It is required by `makeSnaplet`
   as it actually takes `Text` and not `String`. By enabling the
@@ -344,6 +344,10 @@ upload a picture. Follow the steps to add a file upload handler.
    import           Control.Monad.State (liftM, liftIO)
    import           System.FilePath ((</>))
    import           Data.Maybe (fromJust, fromMaybe)
+   import           Data.Int (Int64(..))
+
+   maxFileSize :: Int64
+   maxFileSize = 2^(24::Int)  -- 16MB
 
    uploadHandler :: S.Handler a b ()
    uploadHandler = do
@@ -379,6 +383,7 @@ upload a picture. Follow the steps to add a file upload handler.
    text
    mtl
    filepath
+   io-streams
    ```
 
 3. If the *upload* directory doesn't exist, writing the uploaded
