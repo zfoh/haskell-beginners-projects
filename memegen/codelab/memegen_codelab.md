@@ -339,7 +339,6 @@ upload a picture. Follow the steps to add a file upload handler.
    import qualified Snap.Util.FileUploads as S
    import qualified Data.Text as T
    import qualified System.IO.Streams as IOS
-   import qualified System.IO.Streams.ByteString as IOSB
    import           Data.Text.Encoding (decodeUtf8)
    import           Control.Monad.State (liftM, liftIO)
    import           System.FilePath ((</>))
@@ -353,7 +352,7 @@ upload a picture. Follow the steps to add a file upload handler.
    uploadHandler = do
      -- Files are sent as HTTP multipart form entries.
      files <- S.handleMultipart uploadPolicy $ \part istream -> do
-       content <- fmap (fromMaybe B.empty) $ IOSB.takeBytes maxFileSize istream >>= IOS.read
+       content <- IOS.fold B.append B.empty istream
        return (part, content)
      let (imgPart, imgContent) = head files
      let fileName = fromJust (S.partFileName imgPart)
@@ -839,7 +838,7 @@ image. We will write a string onto the image using the well known
    uploadHandler :: S.Handler AppState AppState ()
    uploadHandler = do
      files <- S.handleMultipart uploadPolicy $ \part istream -> do
-       content <- fmap (fromMaybe B.empty) $ IOSB.takeBytes maxFileSize istream >>= IOS.read
+       content <- IOS.fold B.append B.empty istream
        return (part, content)
      let (imgPart, imgContent) = head files
      let fileName = fromJust (S.partFileName imgPart)

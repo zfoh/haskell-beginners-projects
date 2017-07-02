@@ -23,7 +23,6 @@ import qualified Snap.Snaplet.SqliteSimple as S
 import qualified Snap.Util.FileServe as S
 import qualified Snap.Util.FileUploads as S
 import qualified System.IO.Streams as IOS
-import qualified System.IO.Streams.ByteString as IOSB
 import           Snap.Core (Method(..), rqPostParams, getRequest, writeBS, getParam, method)
 import           System.Directory (createDirectoryIfMissing)
 import           System.FilePath ((</>))
@@ -76,7 +75,7 @@ uploadHandler :: S.Handler AppState AppState ()
 uploadHandler = do
   -- Files are sent as HTTP multipart form entries.
   files <- S.handleMultipart uploadPolicy $ \part istream -> do
-    content <- fmap (fromMaybe B.empty) $ IOSB.takeBytes maxFileSize istream >>= IOS.read
+    content <- IOS.fold B.append B.empty istream
     return (part, content)
   let (imgPart, imgContent) = head files
   let fileName = fromJust (S.partFileName imgPart)
