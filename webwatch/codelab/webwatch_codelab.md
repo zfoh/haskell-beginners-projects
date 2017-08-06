@@ -637,7 +637,7 @@ watchOnce = do
         catchExceptions () $ Slack.sendLinks cSlackWebhookUrl newLinks
 ```
 
-Dont forget to add the catchException:
+Dont forget to add the `catchException`:
 
 ```haskell 
 
