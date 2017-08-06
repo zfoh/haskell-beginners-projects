@@ -637,6 +637,22 @@ watchOnce = do
         catchExceptions () $ Slack.sendLinks cSlackWebhookUrl newLinks
 ```
 
+Dont forget to add the catchException:
+
+```haskell 
+
+catchExceptions :: a -> IO a -> WebWatchM a
+catchExceptions def action = do
+    errOrX <- liftIO $ try action
+    case errOrX of
+        Right x -> return x
+        Left se -> case fromException se of
+            Just x  -> liftIO $ throwIO (x :: AsyncException)
+            Nothing -> do
+                slog $ "Error: " ++ show se
+                return def
+```
+
 We still have to finish the Slack client. To send data to the service, we'll
 use JSON and `aeson` library (remember to update cabal dependencies). Open
 `src/WebWatch/Slack.hs` and add: `Payload` data (message format for
