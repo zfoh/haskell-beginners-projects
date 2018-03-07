@@ -519,7 +519,6 @@ Follow the steps:
 3. Put the data model in it:
 
    ```haskell
-   module Db where
    module Memegen.Db
        ( Meme(..)
        ) where
