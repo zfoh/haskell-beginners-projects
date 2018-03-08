@@ -214,16 +214,16 @@ generic. Later, when we define the application state, we will be able to put a
 concrete type signature.
 
 Try to build the application by running `stack build`. It will fail.
-The `snap` dependency is missing. Open the Cabal configuration and add the
+The `snap` dependency is missing. Open the `package.yml` and add the
 library dependency:
 
 ```
-library
-  ...
-  exposed-modules:     Memegen.Lib
-  build-depends:       base >= 4.7 && < 5
-                     , snap
+  dependencies:
+  - base >= 4.7 && < 5
+  - snap
 ```
+
+We now need to let Stack automatically update our cabal configuration. Run `stack solve --update-config`. You may have to run `stack install cabal-install` prior to running this command.
 
 To make the code compile successfully, we still need to make a couple of changes:
 
